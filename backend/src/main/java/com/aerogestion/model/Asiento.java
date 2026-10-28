@@ -26,6 +26,6 @@ public abstract class Asiento implements Tarificable {
 
     @Override
     public double calcularPrecio(double tarifaBase) {
-        return tarifaBase * getFactorPrecio();
+        return Math.round(tarifaBase * getFactorPrecio() * 100) / 100.0;
     }
 }

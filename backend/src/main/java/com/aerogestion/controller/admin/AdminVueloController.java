@@ -1,113 +1,66 @@
 package com.aerogestion.controller.admin;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.aerogestion.dto.EstadoVueloRequest;
+import com.aerogestion.dto.VueloDTO;
 import com.aerogestion.dto.VueloForm;
-import com.aerogestion.exception.ReglaNegocioException;
 import com.aerogestion.model.EstadoVuelo;
-import com.aerogestion.model.Vuelo;
-import com.aerogestion.service.IAvionService;
 import com.aerogestion.service.IVueloService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/** Gestión de vuelos (HU-06, HU-07, HU-08). */
-@Controller
-@RequestMapping("/admin/vuelos")
+/** Gestión de vuelos (HU-06, HU-07, HU-08). Solo administradores. */
+@RestController
+@RequestMapping("/api/admin/vuelos")
 @RequiredArgsConstructor
 public class AdminVueloController {
 
     private final IVueloService vueloService;
-    private final IAvionService avionService;
 
+    /** Filtros opcionales: ?estado=PROGRAMADO&desde=2026-11-01&hasta=2026-11-05 */
     @GetMapping
-    public String listar(@RequestParam(required = false) EstadoVuelo estado,
+    public List<VueloDTO> listar(@RequestParam(required = false) EstadoVuelo estado,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-            Model model) {
-        model.addAttribute("vuelos", vueloService.listar(estado, desde, hasta));
-        model.addAttribute("estados", EstadoVuelo.values());
-        model.addAttribute("estado", estado);
-        model.addAttribute("desde", desde);
-        model.addAttribute("hasta", hasta);
-        return "admin/vuelos";
-    }
-
-    @GetMapping("/nuevo")
-    public String nuevo(Model model) {
-        prepararFormulario(model, new VueloForm(), null);
-        return "admin/vuelo-form";
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        return vueloService.listar(estado, desde, hasta).stream().map(VueloDTO::de).toList();
     }
 
     @PostMapping
-    public String programar(@Valid @ModelAttribute("form") VueloForm form, BindingResult result,
-            Model model, RedirectAttributes flash) {
-        if (!result.hasErrors()) {
-            try {
-                Vuelo vuelo = vueloService.programar(form);
-                flash.addFlashAttribute("exito", "Vuelo " + vuelo.getCodigoVuelo() + " programado.");
-                return "redirect:/admin/vuelos";
-            } catch (ReglaNegocioException e) {
-                model.addAttribute("error", e.getMessage());
-            }
-        }
-        prepararFormulario(model, form, null);
-        return "admin/vuelo-form";
+    @ResponseStatus(HttpStatus.CREATED)
+    public VueloDTO programar(@Valid @RequestBody VueloForm form) {
+        return VueloDTO.de(vueloService.programar(form));
     }
 
-    @GetMapping("/{id}/editar")
-    public String editar(@PathVariable String id, Model model) {
-        Vuelo vuelo = vueloService.obtener(id);
-        prepararFormulario(model, vueloService.aFormulario(vuelo), vuelo);
-        return "admin/vuelo-form";
+    @PutMapping("/{codigo}")
+    public VueloDTO actualizar(@PathVariable String codigo, @Valid @RequestBody VueloForm form) {
+        return VueloDTO.de(vueloService.actualizar(codigo, form));
     }
 
-    @PostMapping("/{id}")
-    public String actualizar(@PathVariable String id, @Valid @ModelAttribute("form") VueloForm form,
-            BindingResult result, Model model, RedirectAttributes flash) {
-        Vuelo vuelo = vueloService.obtener(id);
-        if (!result.hasErrors()) {
-            try {
-                vueloService.actualizar(id, form);
-                flash.addFlashAttribute("exito", "Vuelo " + vuelo.getCodigoVuelo() + " actualizado.");
-                return "redirect:/admin/vuelos";
-            } catch (ReglaNegocioException e) {
-                model.addAttribute("error", e.getMessage());
-            }
-        }
-        prepararFormulario(model, form, vuelo);
-        return "admin/vuelo-form";
+    /** Cambia el estado (RETRASADO, EMBARCANDO, EN_VUELO, ATERRIZADO...). CANCELADO cancela también las reservas. */
+    @PatchMapping("/{codigo}/estado")
+    public VueloDTO cambiarEstado(@PathVariable String codigo, @Valid @RequestBody EstadoVueloRequest request) {
+        return VueloDTO.de(vueloService.cambiarEstado(codigo, request.estado()));
     }
 
-    @PostMapping("/{id}/estado")
-    public String cambiarEstado(@PathVariable String id, @RequestParam EstadoVuelo estado,
-            RedirectAttributes flash) {
-        try {
-            Vuelo vuelo = vueloService.cambiarEstado(id, estado);
-            flash.addFlashAttribute("exito", "Vuelo " + vuelo.getCodigoVuelo() + " ahora está " + estado + ".");
-        } catch (ReglaNegocioException | IllegalStateException e) {
-            flash.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/admin/vuelos";
-    }
-
-    private void prepararFormulario(Model model, VueloForm form, Vuelo vuelo) {
-        model.addAttribute("form", form);
-        model.addAttribute("vuelo", vuelo);
-        model.addAttribute("aeropuertos", vueloService.listarAeropuertos());
-        model.addAttribute("aviones", avionService.listarDisponibles());
+    @PatchMapping("/{codigo}/cancelar")
+    public VueloDTO cancelar(@PathVariable String codigo) {
+        vueloService.cancelar(codigo);
+        return VueloDTO.de(vueloService.obtener(codigo));
     }
 }

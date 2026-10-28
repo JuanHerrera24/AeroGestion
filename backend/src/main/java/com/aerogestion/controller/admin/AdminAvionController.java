@@ -2,20 +2,22 @@ package com.aerogestion.controller.admin;
 
 import java.util.List;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.aerogestion.dto.AvionDTO;
 import com.aerogestion.dto.AvionForm;
+import com.aerogestion.dto.CambioEstadoAvionDTO;
 import com.aerogestion.dto.ConfigAsientosForm;
-import com.aerogestion.exception.ReglaNegocioException;
+import com.aerogestion.dto.EstadoAvionRequest;
 import com.aerogestion.model.Avion;
 import com.aerogestion.model.EstadoAvion;
 import com.aerogestion.model.Vuelo;
@@ -25,9 +27,9 @@ import com.aerogestion.service.IVueloService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/** Gestión de flota (HU-03, HU-04, HU-05). */
-@Controller
-@RequestMapping("/admin/aviones")
+/** Gestión de la flota (HU-03, HU-04, HU-05). Solo administradores. */
+@RestController
+@RequestMapping("/api/admin/aviones")
 @RequiredArgsConstructor
 public class AdminAvionController {
 
@@ -35,70 +37,36 @@ public class AdminAvionController {
     private final IVueloService vueloService;
 
     @GetMapping
-    public String listar(Model model) {
-        if (!model.containsAttribute("form")) {
-            model.addAttribute("form", new AvionForm());
-        }
-        model.addAttribute("aviones", avionService.listar());
-        model.addAttribute("estados", EstadoAvion.values());
-        return "admin/aviones";
+    public List<AvionDTO> listar() {
+        return avionService.listar().stream().map(AvionDTO::de).toList();
+    }
+
+    @GetMapping("/{matricula}")
+    public AvionDTO detalle(@PathVariable String matricula) {
+        return AvionDTO.de(avionService.obtener(matricula));
     }
 
     @PostMapping
-    public String crear(@Valid @ModelAttribute("form") AvionForm form, BindingResult result,
-            Model model, RedirectAttributes flash) {
-        if (!result.hasErrors()) {
-            try {
-                Avion avion = avionService.crear(form);
-                flash.addFlashAttribute("exito", "Avión " + avion.getMatricula() + " registrado con "
-                        + avion.getCapacidadTotal() + " asientos.");
-                return "redirect:/admin/aviones";
-            } catch (ReglaNegocioException e) {
-                result.rejectValue("matricula", "duplicada", e.getMessage());
-            }
-        }
-        model.addAttribute("aviones", avionService.listar());
-        model.addAttribute("estados", EstadoAvion.values());
-        return "admin/aviones";
+    @ResponseStatus(HttpStatus.CREATED)
+    public AvionDTO registrar(@Valid @RequestBody AvionForm form) {
+        return AvionDTO.de(avionService.crear(form));
     }
 
-    @PostMapping("/{id}/estado")
-    public String cambiarEstado(@PathVariable String id, @RequestParam EstadoAvion estado,
-            RedirectAttributes flash) {
-        Avion avion = avionService.cambiarEstado(id, estado);
-        List<Vuelo> afectados = vueloService.listarFuturosPorAvion(avion);
-        if (estado != EstadoAvion.ACTIVO && !afectados.isEmpty()) {
-            flash.addFlashAttribute("advertencia", "Atención: " + avion.getMatricula() + " tiene "
-                    + afectados.size() + " vuelos programados. Reasígnalos o cancélalos: "
-                    + String.join(", ", afectados.stream().map(Vuelo::getCodigoVuelo).limit(10).toList())
-                    + (afectados.size() > 10 ? "…" : ""));
-        } else {
-            flash.addFlashAttribute("exito", "Estado de " + avion.getMatricula() + " actualizado.");
-        }
-        return "redirect:/admin/aviones";
+    /** Cambia el estado y avisa qué vuelos futuros quedan afectados si el avión deja de estar activo. */
+    @PatchMapping("/{matricula}/estado")
+    public CambioEstadoAvionDTO cambiarEstado(@PathVariable String matricula,
+            @Valid @RequestBody EstadoAvionRequest request) {
+        Avion avion = avionService.cambiarEstado(matricula, request.estado());
+        List<String> afectados = request.estado() == EstadoAvion.ACTIVO
+                ? List.of()
+                : vueloService.listarFuturosPorAvion(avion).stream().map(Vuelo::getCodigoVuelo).toList();
+        String advertencia = afectados.isEmpty() ? null
+                : "El avión tiene " + afectados.size() + " vuelos programados: reasígnalos o cancélalos";
+        return new CambioEstadoAvionDTO(AvionDTO.de(avion), afectados, advertencia);
     }
 
-    @GetMapping("/{id}/asientos")
-    public String verAsientos(@PathVariable String id, Model model) {
-        Avion avion = avionService.obtener(id);
-        model.addAttribute("avion", avion);
-        model.addAttribute("form", avionService.obtenerConfiguracion(avion));
-        return "admin/avion-asientos";
-    }
-
-    @PostMapping("/{id}/asientos")
-    public String configurarAsientos(@PathVariable String id, @Valid @ModelAttribute("form") ConfigAsientosForm form,
-            BindingResult result, Model model, RedirectAttributes flash) {
-        if (result.hasErrors()) {
-            model.addAttribute("avion", avionService.obtener(id));
-            return "admin/avion-asientos";
-        }
-        try {
-            Avion avion = avionService.configurarAsientos(id, form);
-            flash.addFlashAttribute("exito", "Distribución actualizada: " + avion.getCapacidadTotal() + " asientos.");
-        } catch (ReglaNegocioException e) {
-            flash.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/admin/aviones/" + id + "/asientos";
+    @PutMapping("/{matricula}/asientos")
+    public AvionDTO configurarAsientos(@PathVariable String matricula, @Valid @RequestBody ConfigAsientosForm form) {
+        return AvionDTO.de(avionService.configurarAsientos(matricula, form));
     }
 }

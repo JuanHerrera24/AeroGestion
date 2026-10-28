@@ -4,8 +4,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.aerogestion.dto.RegistroForm;
+import com.aerogestion.exception.RecursoNoEncontradoException;
 import com.aerogestion.exception.ReglaNegocioException;
 import com.aerogestion.model.Pasajero;
+import com.aerogestion.model.Usuario;
 import com.aerogestion.repository.UsuarioRepository;
 import com.aerogestion.service.IAuthService;
 
@@ -34,5 +36,11 @@ public class AuthServiceImpl implements IAuthService {
         pasajero.setFechaNacimiento(form.getFechaNacimiento());
         pasajero.setNacionalidad(form.getNacionalidad().trim());
         return usuarioRepository.save(pasajero);
+    }
+
+    @Override
+    public Usuario obtenerPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
     }
 }

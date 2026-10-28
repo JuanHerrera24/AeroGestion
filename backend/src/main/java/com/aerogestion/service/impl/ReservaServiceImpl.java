@@ -41,16 +41,17 @@ public class ReservaServiceImpl implements IReservaService {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Reserva crear(String vueloId, List<String> numerosAsiento, String emailPasajero) {
+    public Reserva crear(String codigoVuelo, List<String> numerosAsiento, String emailPasajero) {
         if (numerosAsiento == null || numerosAsiento.isEmpty()) {
             throw new ReglaNegocioException("Selecciona al menos un asiento");
         }
-        List<String> numeros = new ArrayList<>(new LinkedHashSet<>(numerosAsiento));
+        List<String> numeros = new ArrayList<>(new LinkedHashSet<>(
+                numerosAsiento.stream().map(n -> n.trim().toUpperCase()).toList()));
         if (numeros.size() > MAX_ASIENTOS_POR_RESERVA) {
             throw new ReglaNegocioException("Máximo " + MAX_ASIENTOS_POR_RESERVA + " asientos por reserva");
         }
         Pasajero pasajero = obtenerPasajero(emailPasajero);
-        Vuelo vuelo = vueloService.obtener(vueloId);
+        Vuelo vuelo = vueloService.obtener(codigoVuelo);
         if (!vuelo.estaAbiertoParaReservas()) {
             throw new ReglaNegocioException("El vuelo " + vuelo.getCodigoVuelo() + " no admite reservas");
         }
@@ -59,6 +60,9 @@ public class ReservaServiceImpl implements IReservaService {
             Asiento asiento = vuelo.getAvion().buscarAsiento(numero);
             if (asiento == null) {
                 throw new ReglaNegocioException("El asiento " + numero + " no existe en este avión");
+            }
+            if (vuelo.getAsientosOcupados().contains(numero)) {
+                throw new ReglaNegocioException("El asiento " + numero + " ya está ocupado");
             }
             asientos.add(asiento);
         }
@@ -95,18 +99,18 @@ public class ReservaServiceImpl implements IReservaService {
     }
 
     @Override
-    public Reserva obtenerDelPasajero(String id, String emailPasajero) {
-        Reserva reserva = reservaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Reserva no encontrada"));
+    public Reserva obtenerDelPasajero(String codigoReserva, String emailPasajero) {
+        Reserva reserva = reservaRepository.findByCodigoReserva(codigoReserva.trim().toUpperCase())
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe la reserva " + codigoReserva));
         if (!reserva.getPasajero().getEmail().equals(emailPasajero)) {
-            throw new RecursoNoEncontradoException("Reserva no encontrada");
+            throw new RecursoNoEncontradoException("No existe la reserva " + codigoReserva);
         }
         return reserva;
     }
 
     @Override
-    public void cancelar(String id, String emailPasajero) {
-        Reserva reserva = obtenerDelPasajero(id, emailPasajero);
+    public Reserva cancelar(String codigoReserva, String emailPasajero) {
+        Reserva reserva = obtenerDelPasajero(codigoReserva, emailPasajero);
         if (!reserva.puedeCancelarse()) {
             throw new ReglaNegocioException("Solo puedes cancelar hasta 24 horas antes de la salida del vuelo");
         }
@@ -116,6 +120,7 @@ public class ReservaServiceImpl implements IReservaService {
         Update update = new Update().pullAll("asientosOcupados", reserva.getNumerosAsiento().toArray());
         mongoTemplate.updateFirst(query, update, Vuelo.class);
         notificador.enviarCancelacion(reserva);
+        return reserva;
     }
 
     @Override

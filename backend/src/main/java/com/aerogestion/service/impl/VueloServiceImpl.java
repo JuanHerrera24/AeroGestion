@@ -52,9 +52,9 @@ public class VueloServiceImpl implements IVueloService {
     }
 
     @Override
-    public Vuelo obtener(String id) {
-        return vueloRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Vuelo no encontrado"));
+    public Vuelo obtener(String codigoVuelo) {
+        return vueloRepository.findByCodigoVuelo(codigoVuelo.trim().toUpperCase())
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el vuelo " + codigoVuelo));
     }
 
     @Override
@@ -73,12 +73,12 @@ public class VueloServiceImpl implements IVueloService {
     }
 
     @Override
-    public Vuelo actualizar(String id, VueloForm form) {
-        Vuelo vuelo = obtener(id);
+    public Vuelo actualizar(String codigoVuelo, VueloForm form) {
+        Vuelo vuelo = obtener(codigoVuelo);
         if (!vuelo.puedeCancelarse()) {
             throw new ReglaNegocioException("Solo se pueden editar vuelos programados o retrasados");
         }
-        boolean cambiaAvion = !vuelo.getAvion().getId().equals(form.getAvionId());
+        boolean cambiaAvion = !vuelo.getAvion().getMatricula().equalsIgnoreCase(form.getMatriculaAvion().trim());
         if (cambiaAvion && !vuelo.getAsientosOcupados().isEmpty()) {
             throw new ReglaNegocioException("No se puede cambiar el avión de un vuelo con asientos reservados");
         }
@@ -88,13 +88,13 @@ public class VueloServiceImpl implements IVueloService {
 
     /** Valida las reglas de HU-06 y copia los datos del formulario al vuelo. */
     private void aplicarFormulario(Vuelo vuelo, VueloForm form) {
-        if (form.getOrigenId().equals(form.getDestinoId())) {
+        if (form.getOrigen().trim().equalsIgnoreCase(form.getDestino().trim())) {
             throw new ReglaNegocioException("El origen y el destino no pueden ser iguales");
         }
         if (!form.getFechaHoraLlegada().isAfter(form.getFechaHoraSalida())) {
             throw new ReglaNegocioException("La llegada debe ser posterior a la salida");
         }
-        Avion avion = avionService.obtener(form.getAvionId());
+        Avion avion = avionService.obtener(form.getMatriculaAvion());
         if (!avion.estaDisponible()) {
             throw new ReglaNegocioException("El avión " + avion.getMatricula() + " no está activo");
         }
@@ -109,26 +109,26 @@ public class VueloServiceImpl implements IVueloService {
         if (cruce) {
             throw new ReglaNegocioException("El avión " + avion.getMatricula() + " ya tiene otro vuelo en ese horario");
         }
-        vuelo.setOrigen(obtenerAeropuerto(form.getOrigenId()));
-        vuelo.setDestino(obtenerAeropuerto(form.getDestinoId()));
+        vuelo.setOrigen(obtenerAeropuerto(form.getOrigen()));
+        vuelo.setDestino(obtenerAeropuerto(form.getDestino()));
         vuelo.setFechaHoraSalida(form.getFechaHoraSalida());
         vuelo.setFechaHoraLlegada(form.getFechaHoraLlegada());
         vuelo.setAvion(avion);
         vuelo.setTarifaBase(form.getTarifaBase());
     }
 
-    private Aeropuerto obtenerAeropuerto(String id) {
-        return aeropuertoRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Aeropuerto no encontrado"));
+    private Aeropuerto obtenerAeropuerto(String codigoIata) {
+        return aeropuertoRepository.findByCodigoIata(codigoIata.trim().toUpperCase())
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el aeropuerto " + codigoIata));
     }
 
     @Override
-    public Vuelo cambiarEstado(String id, EstadoVuelo estado) {
+    public Vuelo cambiarEstado(String codigoVuelo, EstadoVuelo estado) {
         if (estado == EstadoVuelo.CANCELADO) {
-            cancelar(id);
-            return obtener(id);
+            cancelar(codigoVuelo);
+            return obtener(codigoVuelo);
         }
-        Vuelo vuelo = obtener(id);
+        Vuelo vuelo = obtener(codigoVuelo);
         if (vuelo.getEstado() == EstadoVuelo.CANCELADO) {
             throw new ReglaNegocioException("El vuelo está cancelado");
         }
@@ -137,8 +137,8 @@ public class VueloServiceImpl implements IVueloService {
     }
 
     @Override
-    public void cancelar(String id) {
-        Vuelo vuelo = obtener(id);
+    public void cancelar(String codigoVuelo) {
+        Vuelo vuelo = obtener(codigoVuelo);
         vuelo.cancelar();
         vueloRepository.save(vuelo);
         for (Reserva reserva : reservaRepository.findByVuelo(vuelo)) {
@@ -151,8 +151,8 @@ public class VueloServiceImpl implements IVueloService {
     }
 
     @Override
-    public List<FilaAsientosDTO> obtenerMapaAsientos(String id) {
-        Vuelo vuelo = obtener(id);
+    public List<FilaAsientosDTO> obtenerMapaAsientos(String codigoVuelo) {
+        Vuelo vuelo = obtener(codigoVuelo);
         Map<Integer, List<AsientoDTO>> filas = new TreeMap<>();
         Map<Integer, String> claseFila = new TreeMap<>();
         for (Asiento a : vuelo.getAvion().getAsientos()) {
@@ -171,9 +171,9 @@ public class VueloServiceImpl implements IVueloService {
     }
 
     @Override
-    public List<ClaseResumenDTO> resumenPorClase(String id) {
+    public List<ClaseResumenDTO> resumenPorClase(String codigoVuelo) {
         Map<String, List<AsientoDTO>> porClase = new LinkedHashMap<>();
-        for (FilaAsientosDTO fila : obtenerMapaAsientos(id)) {
+        for (FilaAsientosDTO fila : obtenerMapaAsientos(codigoVuelo)) {
             porClase.computeIfAbsent(fila.getClase(), c -> new ArrayList<>()).addAll(fila.getAsientos());
         }
         return porClase.entrySet().stream()
@@ -195,18 +195,5 @@ public class VueloServiceImpl implements IVueloService {
     @Override
     public List<Aeropuerto> listarAeropuertos() {
         return aeropuertoRepository.findAll();
-    }
-
-    @Override
-    public VueloForm aFormulario(Vuelo vuelo) {
-        VueloForm form = new VueloForm();
-        form.setCodigoVuelo(vuelo.getCodigoVuelo());
-        form.setOrigenId(vuelo.getOrigen().getId());
-        form.setDestinoId(vuelo.getDestino().getId());
-        form.setFechaHoraSalida(vuelo.getFechaHoraSalida());
-        form.setFechaHoraLlegada(vuelo.getFechaHoraLlegada());
-        form.setAvionId(vuelo.getAvion().getId());
-        form.setTarifaBase(vuelo.getTarifaBase());
-        return form;
     }
 }

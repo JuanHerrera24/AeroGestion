@@ -7,8 +7,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.aerogestion.dto.VueloResumenDTO;
 import com.aerogestion.exception.RecursoNoEncontradoException;
+import com.aerogestion.exception.ReglaNegocioException;
 import com.aerogestion.model.Aeropuerto;
 import com.aerogestion.model.EstadoVuelo;
 import com.aerogestion.model.Vuelo;
@@ -26,33 +26,33 @@ public class BusquedaServiceImpl implements IBusquedaService {
     private final AeropuertoRepository aeropuertoRepository;
 
     @Override
-    public List<VueloResumenDTO> buscar(String origenId, String destinoId, LocalDate fecha, String orden) {
-        Aeropuerto origen = obtenerAeropuerto(origenId);
-        Aeropuerto destino = obtenerAeropuerto(destinoId);
-        Comparator<VueloResumenDTO> comparador = "precio".equals(orden)
-                ? Comparator.comparingDouble(VueloResumenDTO::getPrecioDesde)
-                : Comparator.comparing(r -> r.getVuelo().getFechaHoraSalida());
+    public List<Vuelo> buscar(String origen, String destino, LocalDate fecha, String orden) {
+        if (origen.trim().equalsIgnoreCase(destino.trim())) {
+            throw new ReglaNegocioException("El origen y el destino deben ser distintos");
+        }
+        Comparator<Vuelo> comparador = "precio".equals(orden)
+                ? Comparator.comparingDouble(Vuelo::getTarifaBase)
+                : Comparator.comparing(Vuelo::getFechaHoraSalida);
         return vueloRepository.findByOrigenAndDestinoAndFechaHoraSalidaBetween(
-                        origen, destino, fecha.atStartOfDay(), fecha.plusDays(1).atStartOfDay())
+                        obtenerAeropuerto(origen), obtenerAeropuerto(destino),
+                        fecha.atStartOfDay(), fecha.plusDays(1).atStartOfDay())
                 .stream()
                 .filter(Vuelo::estaAbiertoParaReservas)
-                .map(VueloResumenDTO::new)
                 .sorted(comparador)
                 .toList();
     }
 
     @Override
-    public List<VueloResumenDTO> proximosVuelos(int limite) {
+    public List<Vuelo> proximosVuelos(int limite) {
         return vueloRepository.findByFechaHoraSalidaAfterAndEstadoInOrderByFechaHoraSalida(
                         LocalDateTime.now(), List.of(EstadoVuelo.PROGRAMADO, EstadoVuelo.RETRASADO))
                 .stream()
                 .limit(limite)
-                .map(VueloResumenDTO::new)
                 .toList();
     }
 
-    private Aeropuerto obtenerAeropuerto(String id) {
-        return aeropuertoRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Aeropuerto no encontrado"));
+    private Aeropuerto obtenerAeropuerto(String codigoIata) {
+        return aeropuertoRepository.findByCodigoIata(codigoIata.trim().toUpperCase())
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el aeropuerto " + codigoIata));
     }
 }

@@ -43,9 +43,9 @@ public class AvionServiceImpl implements IAvionService {
     }
 
     @Override
-    public Avion obtener(String id) {
-        return avionRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Avión no encontrado"));
+    public Avion obtener(String matricula) {
+        return avionRepository.findByMatricula(matricula.trim().toUpperCase())
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe un avión con matrícula " + matricula));
     }
 
     @Override
@@ -65,15 +65,15 @@ public class AvionServiceImpl implements IAvionService {
     }
 
     @Override
-    public Avion cambiarEstado(String id, EstadoAvion estado) {
-        Avion avion = obtener(id);
+    public Avion cambiarEstado(String matricula, EstadoAvion estado) {
+        Avion avion = obtener(matricula);
         avion.cambiarEstado(estado);
         return avionRepository.save(avion);
     }
 
     @Override
-    public Avion configurarAsientos(String id, ConfigAsientosForm form) {
-        Avion avion = obtener(id);
+    public Avion configurarAsientos(String matricula, ConfigAsientosForm form) {
+        Avion avion = obtener(matricula);
         boolean tieneReservas = vueloRepository.findByAvion(avion).stream()
                 .anyMatch(v -> v.estaAbiertoParaReservas() && !v.getAsientosOcupados().isEmpty());
         if (tieneReservas) {
@@ -82,22 +82,6 @@ public class AvionServiceImpl implements IAvionService {
         }
         avion.setAsientos(generarAsientos(form));
         return avionRepository.save(avion);
-    }
-
-    @Override
-    public ConfigAsientosForm obtenerConfiguracion(Avion avion) {
-        return new ConfigAsientosForm(
-                contarFilas(avion, "PRIMERA"),
-                contarFilas(avion, "EJECUTIVA"),
-                contarFilas(avion, "ECONOMICA"));
-    }
-
-    private int contarFilas(Avion avion, String clase) {
-        return (int) avion.getAsientos().stream()
-                .filter(a -> a.getClase().equals(clase))
-                .mapToInt(Asiento::getFila)
-                .distinct()
-                .count();
     }
 
     /** Genera los asientos numerando filas de forma continua: Primera, Ejecutiva, Económica. */

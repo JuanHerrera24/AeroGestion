@@ -62,10 +62,10 @@ public class DataSeeder implements CommandLineRunner {
         }
         log.info("Base de datos vacía: cargando datos de demostración...");
         crearUsuarios();
-        List<Aeropuerto> aeropuertos = crearAeropuertos();
+        crearAeropuertos();
         List<Avion> flota = crearFlota();
-        List<Vuelo> vuelos = crearVuelos(aeropuertos, flota);
-        reservaService.crear(vuelos.get(DIAS_DE_VUELOS * 2).getId(), List.of("8A", "8B"), PASAJERO_EMAIL);
+        List<Vuelo> vuelos = crearVuelos(flota);
+        reservaService.crear(vuelos.get(DIAS_DE_VUELOS * 2 + 2).getCodigoVuelo(), List.of("8A", "8B"), PASAJERO_EMAIL);
         log.info("Datos de demostración cargados: {} vuelos.", vuelos.size());
     }
 
@@ -91,7 +91,7 @@ public class DataSeeder implements CommandLineRunner {
         authService.registrar(pasajero);
     }
 
-    private List<Aeropuerto> crearAeropuertos() {
+    private void crearAeropuertos() {
         String[][] datos = {
             {"LIM", "Aeropuerto Internacional Jorge Chávez", "Lima", "Perú"},
             {"CUZ", "Aeropuerto Internacional Alejandro Velasco Astete", "Cusco", "Perú"},
@@ -100,16 +100,14 @@ public class DataSeeder implements CommandLineRunner {
             {"SCL", "Aeropuerto Internacional Arturo Merino Benítez", "Santiago", "Chile"},
             {"MEX", "Aeropuerto Internacional Benito Juárez", "Ciudad de México", "México"},
         };
-        List<Aeropuerto> aeropuertos = new ArrayList<>();
         for (String[] d : datos) {
             Aeropuerto a = new Aeropuerto();
             a.setCodigoIata(d[0]);
             a.setNombre(d[1]);
             a.setCiudad(d[2]);
             a.setPais(d[3]);
-            aeropuertos.add(aeropuertoRepository.save(a));
+            aeropuertoRepository.save(a);
         }
-        return aeropuertos;
     }
 
     private List<Avion> crearFlota() {
@@ -119,7 +117,7 @@ public class DataSeeder implements CommandLineRunner {
         flota.add(avionService.crear(avion("OB-2245", "A321neo", "Airbus", 2023, 3, 4, 24)));
         flota.add(avionService.crear(avion("OB-1790", "787-8 Dreamliner", "Boeing", 2019, 4, 6, 30)));
         Avion enMantenimiento = avionService.crear(avion("OB-1655", "A319", "Airbus", 2015, 0, 3, 18));
-        avionService.cambiarEstado(enMantenimiento.getId(), EstadoAvion.EN_MANTENIMIENTO);
+        avionService.cambiarEstado(enMantenimiento.getMatricula(), EstadoAvion.EN_MANTENIMIENTO);
         return flota;
     }
 
@@ -136,7 +134,7 @@ public class DataSeeder implements CommandLineRunner {
         return f;
     }
 
-    private List<Vuelo> crearVuelos(List<Aeropuerto> aeropuertos, List<Avion> flota) {
+    private List<Vuelo> crearVuelos(List<Avion> flota) {
         List<Ruta> rutas = List.of(
                 new Ruta("LIM", "CUZ", 0, LocalTime.of(6, 0), 80, 89),
                 new Ruta("CUZ", "LIM", 0, LocalTime.of(9, 0), 80, 89),
@@ -155,19 +153,15 @@ public class DataSeeder implements CommandLineRunner {
             for (int dia = 1; dia <= DIAS_DE_VUELOS; dia++) {
                 VueloForm f = new VueloForm();
                 f.setCodigoVuelo(String.format("AG%d-%02d", 101 + r, dia));
-                f.setOrigenId(buscar(aeropuertos, ruta.origen()).getId());
-                f.setDestinoId(buscar(aeropuertos, ruta.destino()).getId());
+                f.setOrigen(ruta.origen());
+                f.setDestino(ruta.destino());
                 f.setFechaHoraSalida(LocalDate.now().plusDays(dia).atTime(ruta.salida()));
                 f.setFechaHoraLlegada(f.getFechaHoraSalida().plusMinutes(ruta.minutos()));
-                f.setAvionId(flota.get(ruta.avion()).getId());
+                f.setMatriculaAvion(flota.get(ruta.avion()).getMatricula());
                 f.setTarifaBase(ruta.tarifa());
                 vuelos.add(vueloService.programar(f));
             }
         }
         return vuelos;
-    }
-
-    private Aeropuerto buscar(List<Aeropuerto> aeropuertos, String iata) {
-        return aeropuertos.stream().filter(a -> a.getCodigoIata().equals(iata)).findFirst().orElseThrow();
     }
 }

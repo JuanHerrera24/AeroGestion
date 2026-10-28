@@ -13,13 +13,11 @@ public interface IAvionService {
 
     List<Avion> listarDisponibles();
 
-    Avion obtener(String id);
+    Avion obtener(String matricula);
 
     Avion crear(AvionForm form);
 
-    Avion cambiarEstado(String id, EstadoAvion estado);
+    Avion cambiarEstado(String matricula, EstadoAvion estado);
 
-    Avion configurarAsientos(String id, ConfigAsientosForm form);
-
-    ConfigAsientosForm obtenerConfiguracion(Avion avion);
+    Avion configurarAsientos(String matricula, ConfigAsientosForm form);
 }

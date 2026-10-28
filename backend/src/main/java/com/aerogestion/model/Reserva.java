@@ -36,9 +36,10 @@ public class Reserva extends EntidadBase implements Cancelable {
     private double total;
 
     public double calcularTotal() {
-        total = asientos.stream()
+        double suma = asientos.stream()
                 .mapToDouble(a -> a.calcularPrecio(vuelo.getTarifaBase()))
                 .sum();
+        total = Math.round(suma * 100) / 100.0;
         return total;
     }
 

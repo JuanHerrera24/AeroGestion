@@ -3,3 +3,4 @@ backend/target/
 .idea/
 .vscode/
 *.iml
+*.vpp.bak*

@@ -15,23 +15,21 @@ public interface IVueloService {
 
     List<Vuelo> listar(EstadoVuelo estado, LocalDate desde, LocalDate hasta);
 
-    Vuelo obtener(String id);
+    Vuelo obtener(String codigoVuelo);
 
     Vuelo programar(VueloForm form);
 
-    Vuelo actualizar(String id, VueloForm form);
+    Vuelo actualizar(String codigoVuelo, VueloForm form);
 
-    Vuelo cambiarEstado(String id, EstadoVuelo estado);
+    Vuelo cambiarEstado(String codigoVuelo, EstadoVuelo estado);
 
-    void cancelar(String id);
+    void cancelar(String codigoVuelo);
 
-    List<FilaAsientosDTO> obtenerMapaAsientos(String id);
+    List<FilaAsientosDTO> obtenerMapaAsientos(String codigoVuelo);
 
-    List<ClaseResumenDTO> resumenPorClase(String id);
+    List<ClaseResumenDTO> resumenPorClase(String codigoVuelo);
 
     List<Vuelo> listarFuturosPorAvion(Avion avion);
 
     List<Aeropuerto> listarAeropuertos();
-
-    VueloForm aFormulario(Vuelo vuelo);
 }
