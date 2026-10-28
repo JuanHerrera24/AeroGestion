@@ -1,4 +1,4 @@
-# ✈️ AeroGestión
+# AeroGestión
 
 Sistema para la gestión de una aerolínea: permite administrar vuelos y la flota de aviones,
 y que los pasajeros busquen y reserven vuelos con selección de asientos.
@@ -7,7 +7,7 @@ Se expone como una **API REST** que se prueba con Postman.
 
 **Stack:** Java 21 · Spring Boot 3.3 · Spring Security · Spring Data MongoDB · MongoDB 8
 
-## ▶️ Cómo ejecutarlo
+## Cómo ejecutarlo
 
 **Opción fácil:** doble clic en **`INICIAR.bat`**. Levanta MongoDB y la API en
 `http://localhost:8080/api`.
@@ -23,7 +23,7 @@ La primera vez se cargan **datos de demostración**: 6 aeropuertos, 5 aviones y 
 para los 10 días siguientes. Los vuelos se llaman `AG1XX-DD`, donde `DD` es el día contado
 desde la carga (`AG101-01` sale al día siguiente).
 
-## 🧪 Probar con Postman
+## Probar con Postman
 
 1. Abre Postman → **Import** → elige `postman/AeroGestion.postman_collection.json`.
 2. La colección trae 4 carpetas: **Público**, **Pasajero**, **Administrador** y
@@ -37,7 +37,7 @@ desde la carga (`AG101-01` sale al día siguiente).
 | Administrador | admin@aerogestion.com | Admin2026! |
 | Pasajero | pasajero@aerogestion.com | Pasajero2026! |
 
-## 📡 Endpoints
+## Endpoints
 
 ### Públicos (sin iniciar sesión)
 | Método | Ruta | Descripción | HU |
@@ -81,7 +81,7 @@ desde la carga (`AG101-01` sale al día siguiente).
 | 403 | El rol no tiene permiso |
 | 404 | No existe el vuelo, avión o reserva |
 
-## 📏 Reglas de negocio
+## Reglas de negocio
 
 - Origen y destino distintos; la llegada debe ser posterior a la salida.
 - Un avión no puede tener dos vuelos a la vez ni volar si no está `ACTIVO`.
@@ -90,7 +90,7 @@ desde la carga (`AG101-01` sale al día siguiente).
 - Una reserva se puede cancelar hasta 24 horas antes de la salida.
 - Si se cancela un vuelo, se cancelan sus reservas y se avisa a los pasajeros por correo.
 
-## 📦 Entregables
+## Entregables
 
 | Entregable | Archivo |
 |---|---|
@@ -101,7 +101,7 @@ desde la carga (`AG101-01` sale al día siguiente).
 | Proyecto de Visual Paradigm | [diagramas/AeroGestion.vpp](diagramas/AeroGestion.vpp) |
 | Colección de Postman | [postman/AeroGestion.postman_collection.json](postman/AeroGestion.postman_collection.json) |
 
-## 🗂️ Estructura del código
+## Estructura del código
 
 ```
 backend/src/main/java/com/aerogestion/
@@ -119,7 +119,7 @@ backend/src/main/java/com/aerogestion/
 └── exception/           Manejo de errores en JSON
 ```
 
-## ✉️ Correo
+## Correo
 
 Sin una cuenta SMTP configurada, los correos se **simulan** y aparecen en la consola
 (`[Correo simulado] ...`). Para enviarlos de verdad, completa `spring.mail.username` y

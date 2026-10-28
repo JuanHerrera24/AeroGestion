@@ -19,15 +19,15 @@
 
 | Épica | Historias |
 |---|---|
-| 🔐 E1: Autenticación y cuentas | HU-01, HU-02 |
-| ✈️ E2: Gestión de flota | HU-03, HU-04, HU-05 |
-| 🗓️ E3: Gestión de vuelos | HU-06, HU-07, HU-08 |
-| 🔎 E4: Búsqueda de vuelos | HU-09, HU-10 |
-| 🎫 E5: Reservas y asientos | HU-11, HU-12, HU-13, HU-14 |
+| E1: Autenticación y cuentas | HU-01, HU-02 |
+| E2: Gestión de flota | HU-03, HU-04, HU-05 |
+| E3: Gestión de vuelos | HU-06, HU-07, HU-08 |
+| E4: Búsqueda de vuelos | HU-09, HU-10 |
+| E5: Reservas y asientos | HU-11, HU-12, HU-13, HU-14 |
 
 ---
 
-## 🔐 E1: Autenticación y cuentas
+## E1: Autenticación y cuentas
 
 ### HU-01 · Registro de pasajero
 **Labels:** `historia-de-usuario` `epica:autenticacion` `prioridad:must`
@@ -64,7 +64,7 @@
 
 ---
 
-## ✈️ E2: Gestión de flota
+## E2: Gestión de flota
 
 ### HU-03 · Registrar avión
 **Labels:** `historia-de-usuario` `epica:flota` `prioridad:must`
@@ -116,7 +116,7 @@
 
 ---
 
-## 🗓️ E3: Gestión de vuelos
+## E3: Gestión de vuelos
 
 ### HU-06 · Programar vuelo
 **Labels:** `historia-de-usuario` `epica:vuelos` `prioridad:must`
@@ -169,7 +169,7 @@
 
 ---
 
-## 🔎 E4: Búsqueda de vuelos
+## E4: Búsqueda de vuelos
 
 ### HU-09 · Buscar vuelos
 **Labels:** `historia-de-usuario` `epica:busqueda` `prioridad:must`
@@ -204,7 +204,7 @@
 
 ---
 
-## 🎫 E5: Reservas y asientos
+## E5: Reservas y asientos
 
 ### HU-11 · Seleccionar asiento
 **Labels:** `historia-de-usuario` `epica:reservas` `prioridad:must`
