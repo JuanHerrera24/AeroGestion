@@ -1,0 +1,302 @@
+{
+  "info": {
+    "name": "AeroGestión API",
+    "description": "Peticiones de la API REST de AeroGestión.\n\nAntes de empezar, ejecuta INICIAR.bat (MongoDB + API en http://localhost:8080).\n\nLos vuelos de demostración se llaman AG1XX-DD, donde DD es el número de día contado desde que se cargaron los datos (01 = el día siguiente). Ajusta las variables 'vuelo' y 'fecha' si hace falta.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "vuelo", "value": "AG101-03" },
+    { "key": "fecha", "value": "2026-10-31" },
+    { "key": "reserva", "value": "PEGA-AQUI-EL-CODIGO" },
+    { "key": "adminEmail", "value": "admin@aerogestion.com" },
+    { "key": "adminPassword", "value": "Admin2026!" },
+    { "key": "pasajeroEmail", "value": "pasajero@aerogestion.com" },
+    { "key": "pasajeroPassword", "value": "Pasajero2026!" }
+  ],
+  "item": [
+    {
+      "name": "1. Público (sin iniciar sesión)",
+      "auth": { "type": "noauth" },
+      "item": [
+        {
+          "name": "Listar aeropuertos",
+          "request": { "method": "GET", "url": "{{baseUrl}}/aeropuertos" }
+        },
+        {
+          "name": "Próximos vuelos",
+          "request": { "method": "GET", "url": "{{baseUrl}}/vuelos/proximos" }
+        },
+        {
+          "name": "Buscar vuelos LIM → CUZ (HU-09)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/vuelos/buscar?origen=LIM&destino=CUZ&fecha={{fecha}}" }
+        },
+        {
+          "name": "Buscar vuelos ordenados por precio",
+          "request": { "method": "GET", "url": "{{baseUrl}}/vuelos/buscar?origen=LIM&destino=BOG&fecha={{fecha}}&orden=precio" }
+        },
+        {
+          "name": "Detalle del vuelo y precios por clase (HU-10)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/vuelos/{{vuelo}}" }
+        },
+        {
+          "name": "Mapa de asientos (HU-11)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/vuelos/{{vuelo}}/asientos" }
+        },
+        {
+          "name": "Registrar pasajero (HU-01)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/registro",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"María\",\n  \"apellido\": \"López\",\n  \"email\": \"maria.lopez@correo.com\",\n  \"documentoIdentidad\": \"72345678\",\n  \"telefono\": \"987123456\",\n  \"fechaNacimiento\": \"1999-08-21\",\n  \"nacionalidad\": \"Peruana\",\n  \"password\": \"clave2026\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Pasajero",
+      "auth": {
+        "type": "basic",
+        "basic": [
+          { "key": "username", "value": "{{pasajeroEmail}}", "type": "string" },
+          { "key": "password", "value": "{{pasajeroPassword}}", "type": "string" }
+        ]
+      },
+      "item": [
+        {
+          "name": "¿Quién soy? (HU-02)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/auth/yo" }
+        },
+        {
+          "name": "Reservar asientos (HU-12)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/reservas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoVuelo\": \"{{vuelo}}\",\n  \"asientos\": [\"1A\", \"10C\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Copia el 'codigo' de la respuesta (ej. AG-7K2P9X) en la variable 'reserva' de la colección."
+          }
+        },
+        {
+          "name": "Reservar un asiento ya ocupado (error)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/reservas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoVuelo\": \"{{vuelo}}\",\n  \"asientos\": [\"1A\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Mis reservas (HU-13)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/reservas" }
+        },
+        {
+          "name": "Detalle de una reserva",
+          "request": { "method": "GET", "url": "{{baseUrl}}/reservas/{{reserva}}" }
+        },
+        {
+          "name": "Cancelar reserva (HU-14)",
+          "request": { "method": "PATCH", "url": "{{baseUrl}}/reservas/{{reserva}}/cancelar" }
+        }
+      ]
+    },
+    {
+      "name": "3. Administrador",
+      "auth": {
+        "type": "basic",
+        "basic": [
+          { "key": "username", "value": "{{adminEmail}}", "type": "string" },
+          { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+        ]
+      },
+      "item": [
+        {
+          "name": "Panel: resumen de operaciones (HU-08)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/resumen" }
+        },
+        {
+          "name": "Listar flota",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/aviones" }
+        },
+        {
+          "name": "Registrar avión (HU-03)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/admin/aviones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matricula\": \"OB-2399\",\n  \"fabricante\": \"Embraer\",\n  \"modelo\": \"E195-E2\",\n  \"anioFabricacion\": 2024,\n  \"filasPrimera\": 0,\n  \"filasEjecutiva\": 3,\n  \"filasEconomica\": 20\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Configurar mapa de asientos (HU-05)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/admin/aviones/OB-2399/asientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filasPrimera\": 2,\n  \"filasEjecutiva\": 2,\n  \"filasEconomica\": 18\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Poner avión en mantenimiento (HU-04)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/admin/aviones/OB-2101/estado",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"EN_MANTENIMIENTO\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "description": "Responde con los vuelos futuros afectados. Para volver a activarlo usa \"ACTIVO\"."
+          }
+        },
+        {
+          "name": "Reactivar avión",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/admin/aviones/OB-2101/estado",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"ACTIVO\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Listar vuelos con filtros",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/vuelos?estado=PROGRAMADO&desde={{fecha}}&hasta={{fecha}}" }
+        },
+        {
+          "name": "Programar vuelo (HU-06)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/admin/vuelos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoVuelo\": \"AG900\",\n  \"origen\": \"LIM\",\n  \"destino\": \"SCL\",\n  \"fechaHoraSalida\": \"2026-11-20T09:00\",\n  \"fechaHoraLlegada\": \"2026-11-20T12:45\",\n  \"matriculaAvion\": \"OB-2399\",\n  \"tarifaBase\": 250\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Editar vuelo (HU-07)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/admin/vuelos/AG900",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoVuelo\": \"AG900\",\n  \"origen\": \"LIM\",\n  \"destino\": \"SCL\",\n  \"fechaHoraSalida\": \"2026-11-20T10:00\",\n  \"fechaHoraLlegada\": \"2026-11-20T13:45\",\n  \"matriculaAvion\": \"OB-2399\",\n  \"tarifaBase\": 260\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Retrasar vuelo (HU-07)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/admin/vuelos/AG900/estado",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"RETRASADO\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Cancelar vuelo y sus reservas (HU-07)",
+          "request": { "method": "PATCH", "url": "{{baseUrl}}/admin/vuelos/AG900/cancelar" }
+        }
+      ]
+    },
+    {
+      "name": "4. Validaciones y seguridad",
+      "item": [
+        {
+          "name": "Sin iniciar sesión → 401",
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/reservas" }
+        },
+        {
+          "name": "Pasajero entra a admin → 403",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{pasajeroEmail}}", "type": "string" },
+                { "key": "password", "value": "{{pasajeroPassword}}", "type": "string" }
+              ]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/resumen"
+          }
+        },
+        {
+          "name": "Búsqueda con origen = destino → 400",
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/vuelos/buscar?origen=LIM&destino=LIM&fecha={{fecha}}" }
+        },
+        {
+          "name": "Registro con datos inválidos → 400",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/registro",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"correo-invalido\",\n  \"password\": \"123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Vuelo con avión en mantenimiento → 400",
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{adminEmail}}", "type": "string" },
+                { "key": "password", "value": "{{adminPassword}}", "type": "string" }
+              ]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/admin/vuelos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoVuelo\": \"AG950\",\n  \"origen\": \"LIM\",\n  \"destino\": \"CUZ\",\n  \"fechaHoraSalida\": \"2026-11-22T10:00\",\n  \"fechaHoraLlegada\": \"2026-11-22T11:20\",\n  \"matriculaAvion\": \"OB-1655\",\n  \"tarifaBase\": 90\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Vuelo inexistente → 404",
+          "request": { "auth": { "type": "noauth" }, "method": "GET", "url": "{{baseUrl}}/vuelos/XX999" }
+        }
+      ]
+    }
+  ]
+}
