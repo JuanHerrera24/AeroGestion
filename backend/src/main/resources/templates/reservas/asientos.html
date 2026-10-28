@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Elige tu asiento')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+
+<main class="container">
+    <div th:replace="~{fragments :: alertas}"></div>
+
+    <div class="card">
+        <div class="card-title">
+            <h2 th:text="${'Elige tu asiento · ' + vuelo.codigoVuelo}">Elige tu asiento</h2>
+            <span class="texto-suave" th:text="${#temporals.format(vuelo.fechaHoraSalida, 'EEEE dd MMMM, HH:mm')}"></span>
+        </div>
+        <div th:replace="~{fragments :: ruta(${vuelo})}"></div>
+    </div>
+
+    <form th:action="@{/reservas}" method="post">
+        <input type="hidden" name="vueloId" th:value="${vuelo.id}">
+        <div class="mapa-layout">
+            <div class="cabina">
+                <div class="nariz">▲ Cabina de mando</div>
+                <th:block th:each="f, it : ${filas}">
+                    <div class="separador-clase"
+                         th:if="${it.first or filas[it.index - 1].clase != f.clase}"
+                         th:style="${'color: var(--' + #strings.toLowerCase(f.clase) + ')'}"
+                         th:text="${f.clase == 'PRIMERA' ? 'Primera clase' : (f.clase == 'EJECUTIVA' ? 'Clase ejecutiva' : 'Clase económica')}">Clase</div>
+                    <div class="fila">
+                        <span class="num-fila" th:text="${f.fila}">1</span>
+                        <th:block th:each="a : ${f.asientos}">
+                            <label class="asiento" th:classappend="${a.clase + (a.ocupado ? ' ocupado' : '')}"
+                                   th:title="${a.ocupado ? a.numero + ' · ocupado' : a.numero + ' · $' + #numbers.formatDecimal(a.precio, 1, 'COMMA', 2, 'POINT')}">
+                                <input type="checkbox" name="asientos" th:value="${a.numero}" th:disabled="${a.ocupado}">
+                                <span th:text="${a.ocupado ? '✕' : a.numero}">1A</span>
+                            </label>
+                            <span class="pasillo" th:if="${a.pasillo}"></span>
+                        </th:block>
+                        <span class="num-fila" th:text="${f.fila}">1</span>
+                    </div>
+                </th:block>
+            </div>
+
+            <div class="resumen-sticky">
+                <div class="card">
+                    <h2>Tarifas</h2>
+                    <table>
+                        <tbody>
+                        <tr th:each="c : ${clases}">
+                            <td><span class="badge" th:classappend="${'badge-' + c.clase}" th:text="${c.clase}"></span></td>
+                            <td style="text-align: right;"><strong th:text="${'$' + #numbers.formatDecimal(c.precio, 1, 'COMMA', 2, 'POINT')}"></strong></td>
+                            <td class="texto-suave" style="text-align: right;" th:text="${c.disponibles + ' libres'}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="leyenda" style="margin: 18px 0;">
+                        <span><i style="border-color: var(--economica)"></i>Disponible</span>
+                        <span><i style="background: var(--oro); border-color: #c98a0b"></i>Seleccionado</span>
+                        <span><i style="background: var(--gris-300); border-color: var(--gris-300)"></i>Ocupado</span>
+                    </div>
+
+                    <p class="texto-suave" style="font-size: .875rem;">
+                        Marca uno o varios asientos (máx. 9). El total se calcula al confirmar.
+                    </p>
+                    <button class="btn btn-oro btn-bloque" type="submit">✅ Confirmar reserva</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

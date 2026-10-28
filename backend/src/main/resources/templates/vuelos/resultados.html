@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Resultados')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+
+<main class="container">
+    <div class="card">
+        <form class="form-busqueda" th:action="@{/vuelos/buscar}" method="get">
+            <div class="campo">
+                <label for="origen">Origen</label>
+                <select id="origen" name="origen">
+                    <option th:each="a : ${aeropuertos}" th:value="${a.id}" th:selected="${a.id == origen}"
+                            th:text="${a.ciudad + ' (' + a.codigoIata + ')'}"></option>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="destino">Destino</label>
+                <select id="destino" name="destino">
+                    <option th:each="a : ${aeropuertos}" th:value="${a.id}" th:selected="${a.id == destino}"
+                            th:text="${a.ciudad + ' (' + a.codigoIata + ')'}"></option>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="fecha">Fecha</label>
+                <input id="fecha" type="date" name="fecha" th:value="${fecha}">
+            </div>
+            <input type="hidden" name="orden" th:value="${orden}">
+            <button class="btn btn-oro" type="submit">🔎 Buscar</button>
+        </form>
+    </div>
+
+    <div class="alerta alerta-error" th:if="${error}" th:text="${error}"></div>
+
+    <th:block th:if="${resultados != null}">
+        <div class="card-title">
+            <h2 th:text="${#lists.size(resultados) + ' vuelo(s) para el ' + #temporals.format(fecha, 'dd/MM/yyyy')}">Resultados</h2>
+            <div class="orden-links">
+                <a th:href="@{/vuelos/buscar(origen=${origen},destino=${destino},fecha=${fecha},orden='hora')}"
+                   th:classappend="${orden != 'precio'} ? 'activo'">⏱ Hora de salida</a>
+                <a th:href="@{/vuelos/buscar(origen=${origen},destino=${destino},fecha=${fecha},orden='precio')}"
+                   th:classappend="${orden == 'precio'} ? 'activo'">💲 Precio</a>
+            </div>
+        </div>
+
+        <div class="card vacio" th:if="${#lists.isEmpty(resultados)}">
+            <div class="icono">🌤️</div>
+            <p><strong>No hay vuelos disponibles para esta búsqueda.</strong></p>
+            <p>Prueba con otra fecha o ruta.</p>
+        </div>
+
+        <div class="card" th:each="r : ${resultados}">
+            <div class="vuelo-card">
+                <div>
+                    <div th:replace="~{fragments :: ruta(${r.vuelo})}"></div>
+                    <div class="meta">
+                        <span th:text="${'✈ ' + r.vuelo.codigoVuelo}">AG101</span>
+                        <span th:text="${'🛩 ' + r.vuelo.avion.fabricante + ' ' + r.vuelo.avion.modelo}">Airbus A320</span>
+                        <span th:text="${'💺 ' + r.asientosDisponibles + ' asientos libres'}">libres</span>
+                        <span class="badge" th:classappend="${'badge-' + r.vuelo.estado}" th:text="${r.vuelo.estado}">PROGRAMADO</span>
+                    </div>
+                </div>
+                <div class="precio">
+                    <div class="desde">desde (económica)</div>
+                    <div class="monto" th:text="${'$' + #numbers.formatDecimal(r.precioDesde, 1, 'COMMA', 2, 'POINT')}">$89</div>
+                    <a class="btn btn-sm" th:href="@{/vuelos/{id}(id=${r.vuelo.id})}" style="margin-top: 8px;">Ver detalle</a>
+                </div>
+            </div>
+        </div>
+    </th:block>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

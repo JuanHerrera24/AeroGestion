@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Flota')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+
+<main class="container">
+    <div th:replace="~{fragments :: alertas}"></div>
+
+    <div class="card">
+        <div class="card-title">
+            <h2>✈ Flota de aviones</h2>
+            <span class="texto-suave" th:text="${#lists.size(aviones) + ' aviones'}"></span>
+        </div>
+        <div class="tabla-wrap">
+            <table>
+                <thead><tr><th>Matrícula</th><th>Modelo</th><th>Año</th><th>Capacidad</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody>
+                <tr th:each="a : ${aviones}">
+                    <td><strong th:text="${a.matricula}"></strong></td>
+                    <td th:text="${a.fabricante + ' ' + a.modelo}"></td>
+                    <td th:text="${a.anioFabricacion}"></td>
+                    <td th:text="${a.capacidadTotal + ' asientos'}"></td>
+                    <td><span class="badge" th:classappend="${'badge-' + a.estado}" th:text="${a.estado}"></span></td>
+                    <td>
+                        <div class="acciones-inline">
+                            <form th:action="@{/admin/aviones/{id}/estado(id=${a.id})}" method="post">
+                                <select name="estado" aria-label="Nuevo estado">
+                                    <option th:each="e : ${estados}" th:value="${e}" th:text="${e}" th:selected="${e == a.estado}"></option>
+                                </select>
+                                <button class="btn btn-claro btn-sm" type="submit">Cambiar</button>
+                            </form>
+                            <a class="btn btn-claro btn-sm" th:href="@{/admin/aviones/{id}/asientos(id=${a.id})}">💺 Asientos</a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Registrar nuevo avión</h2>
+        <form th:action="@{/admin/aviones}" th:object="${form}" method="post">
+            <div class="grid grid-3" style="gap: 0 20px;">
+                <div class="campo" th:classappend="${#fields.hasErrors('matricula')} ? 'campo-error'">
+                    <label for="matricula">Matrícula</label>
+                    <input id="matricula" th:field="*{matricula}" placeholder="OB-2301">
+                    <span class="error-campo" th:errors="*{matricula}"></span>
+                </div>
+                <div class="campo" th:classappend="${#fields.hasErrors('fabricante')} ? 'campo-error'">
+                    <label for="fabricante">Fabricante</label>
+                    <input id="fabricante" th:field="*{fabricante}" placeholder="Airbus">
+                    <span class="error-campo" th:errors="*{fabricante}"></span>
+                </div>
+                <div class="campo" th:classappend="${#fields.hasErrors('modelo')} ? 'campo-error'">
+                    <label for="modelo">Modelo</label>
+                    <input id="modelo" th:field="*{modelo}" placeholder="A320neo">
+                    <span class="error-campo" th:errors="*{modelo}"></span>
+                </div>
+                <div class="campo" th:classappend="${#fields.hasErrors('anioFabricacion')} ? 'campo-error'">
+                    <label for="anioFabricacion">Año de fabricación</label>
+                    <input id="anioFabricacion" type="number" th:field="*{anioFabricacion}">
+                    <span class="error-campo" th:errors="*{anioFabricacion}"></span>
+                </div>
+                <div class="campo">
+                    <label for="filasPrimera">Filas Primera (4 por fila)</label>
+                    <input id="filasPrimera" type="number" min="0" max="10" th:field="*{filasPrimera}">
+                </div>
+                <div class="campo">
+                    <label for="filasEjecutiva">Filas Ejecutiva (4 por fila)</label>
+                    <input id="filasEjecutiva" type="number" min="0" max="20" th:field="*{filasEjecutiva}">
+                </div>
+                <div class="campo">
+                    <label for="filasEconomica">Filas Económica (6 por fila)</label>
+                    <input id="filasEconomica" type="number" min="1" max="60" th:field="*{filasEconomica}">
+                </div>
+            </div>
+            <button class="btn btn-oro" type="submit">Registrar avión</button>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

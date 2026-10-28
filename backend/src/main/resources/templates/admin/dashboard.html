@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Panel de administración')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+
+<main class="container">
+    <div class="card-title">
+        <h1>Panel de operaciones</h1>
+        <div class="acciones-inline">
+            <a class="btn btn-oro" th:href="@{/admin/vuelos/nuevo}">+ Programar vuelo</a>
+            <a class="btn btn-claro" th:href="@{/admin/aviones}">+ Registrar avión</a>
+        </div>
+    </div>
+
+    <div class="grid grid-stats" style="margin-bottom: 24px;">
+        <div class="stat">
+            <div class="valor" th:text="${vuelosSemana}">0</div>
+            <div class="etiqueta">Vuelos en los próximos 7 días</div>
+        </div>
+        <div class="stat verde">
+            <div class="valor" th:text="${avionesActivos + ' / ' + totalAviones}">0</div>
+            <div class="etiqueta">Aviones activos</div>
+        </div>
+        <div class="stat oro">
+            <div class="valor" th:text="${reservasConfirmadas}">0</div>
+            <div class="etiqueta">Reservas confirmadas</div>
+        </div>
+        <div class="stat cielo">
+            <div class="valor" th:text="${#numbers.formatDecimal(ocupacionMedia, 1, 1) + '%'}">0%</div>
+            <div class="etiqueta">Ocupación media (7 días)</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">
+            <h2>Próximas salidas</h2>
+            <a th:href="@{/admin/vuelos}">Ver todos →</a>
+        </div>
+        <div class="tabla-wrap">
+            <table>
+                <thead><tr><th>Vuelo</th><th>Ruta</th><th>Salida</th><th>Avión</th><th>Ocupación</th><th>Estado</th></tr></thead>
+                <tbody>
+                <tr th:each="v : ${proximos}">
+                    <td><strong th:text="${v.codigoVuelo}"></strong></td>
+                    <td th:text="${v.origen.codigoIata + ' → ' + v.destino.codigoIata}"></td>
+                    <td th:text="${#temporals.format(v.fechaHoraSalida, 'dd/MM HH:mm')}"></td>
+                    <td th:text="${v.avion.matricula}"></td>
+                    <td>
+                        <div class="barra"><span th:style="${'width:' + v.porcentajeOcupacion + '%'}"></span></div>
+                        <small class="texto-suave" th:text="${v.asientosOcupados.size() + ' / ' + v.avion.capacidadTotal}"></small>
+                    </td>
+                    <td><span class="badge" th:classappend="${'badge-' + v.estado}" th:text="${v.estado}"></span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

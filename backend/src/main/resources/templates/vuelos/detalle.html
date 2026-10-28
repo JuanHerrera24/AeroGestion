@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Detalle del vuelo')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+
+<main class="container">
+    <div class="card">
+        <div class="card-title">
+            <h2 th:text="${'Vuelo ' + vuelo.codigoVuelo}">Vuelo AG101</h2>
+            <span class="badge" th:classappend="${'badge-' + vuelo.estado}" th:text="${vuelo.estado}">PROGRAMADO</span>
+        </div>
+        <div th:replace="~{fragments :: ruta(${vuelo})}"></div>
+    </div>
+
+    <div class="grid grid-2">
+        <div class="card">
+            <h2>Información</h2>
+            <dl class="lista-datos">
+                <dt>Fecha</dt>
+                <dd th:text="${#temporals.format(vuelo.fechaHoraSalida, 'EEEE dd MMMM yyyy')}"></dd>
+                <dt>Sale de</dt>
+                <dd th:text="${vuelo.origen.nombre}"></dd>
+                <dt>Llega a</dt>
+                <dd th:text="${vuelo.destino.nombre}"></dd>
+                <dt>Avión</dt>
+                <dd th:text="${vuelo.avion.fabricante + ' ' + vuelo.avion.modelo + ' (' + vuelo.avion.matricula + ')'}"></dd>
+                <dt>Capacidad</dt>
+                <dd th:text="${vuelo.avion.capacidadTotal + ' asientos'}"></dd>
+            </dl>
+        </div>
+
+        <div class="card">
+            <h2>Precios por clase</h2>
+            <table>
+                <thead><tr><th>Clase</th><th>Precio</th><th>Disponibles</th></tr></thead>
+                <tbody>
+                <tr th:each="c : ${clases}">
+                    <td><span class="badge" th:classappend="${'badge-' + c.clase}" th:text="${c.clase}"></span></td>
+                    <td><strong th:text="${'$' + #numbers.formatDecimal(c.precio, 1, 'COMMA', 2, 'POINT')}"></strong></td>
+                    <td th:text="${c.disponibles + ' / ' + c.total}"></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 20px;" th:if="${vuelo.estaAbiertoParaReservas()}">
+                <a class="btn btn-oro btn-bloque" sec:authorize="!hasRole('ADMIN')"
+                   th:href="@{/reservas/vuelo/{id}(id=${vuelo.id})}">💺 Elegir asiento y reservar</a>
+                <p class="texto-suave" sec:authorize="!isAuthenticated()" style="font-size: .85rem; text-align: center;">
+                    Te pediremos iniciar sesión para confirmar la reserva.
+                </p>
+            </div>
+            <div class="alerta alerta-advertencia" style="margin-top: 20px;" th:unless="${vuelo.estaAbiertoParaReservas()}">
+                Este vuelo ya no admite reservas.
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

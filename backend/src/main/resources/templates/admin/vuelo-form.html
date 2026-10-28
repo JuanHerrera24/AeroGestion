@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head(${vuelo == null ? 'Programar vuelo' : 'Editar vuelo'})}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+
+<main class="container">
+    <p><a th:href="@{/admin/vuelos}">← Volver a vuelos</a></p>
+    <div th:replace="~{fragments :: alertas}"></div>
+
+    <div class="card auth-card ancho">
+        <h1 th:text="${vuelo == null ? 'Programar vuelo' : 'Editar vuelo ' + vuelo.codigoVuelo}">Programar vuelo</h1>
+
+        <form th:action="${vuelo == null} ? @{/admin/vuelos} : @{/admin/vuelos/{id}(id=${vuelo.id})}"
+              th:object="${form}" method="post">
+            <div class="grid grid-2" style="gap: 0 20px;">
+                <div class="campo" th:classappend="${#fields.hasErrors('codigoVuelo')} ? 'campo-error'">
+                    <label for="codigoVuelo">Código de vuelo</label>
+                    <input id="codigoVuelo" th:field="*{codigoVuelo}" placeholder="AG500" th:readonly="${vuelo != null}">
+                    <span class="error-campo" th:errors="*{codigoVuelo}"></span>
+                </div>
+                <div class="campo" th:classappend="${#fields.hasErrors('tarifaBase')} ? 'campo-error'">
+                    <label for="tarifaBase">Tarifa base económica (USD)</label>
+                    <input id="tarifaBase" type="number" step="0.01" min="1" th:field="*{tarifaBase}">
+                    <span class="error-campo" th:errors="*{tarifaBase}"></span>
+                </div>
+                <div class="campo" th:classappend="${#fields.hasErrors('origenId')} ? 'campo-error'">
+                    <label for="origenId">Origen</label>
+                    <select id="origenId" th:field="*{origenId}">
+                        <option value="">Selecciona…</option>
+                        <option th:each="a : ${aeropuertos}" th:value="${a.id}" th:text="${a.ciudad + ' (' + a.codigoIata + ')'}"></option>
+                    </select>
+                    <span class="error-campo" th:errors="*{origenId}"></span>
+                </div>
+                <div class="campo" th:classappend="${#fields.hasErrors('destinoId')} ? 'campo-error'">
+                    <label for="destinoId">Destino</label>
+                    <select id="destinoId" th:field="*{destinoId}">
+                        <option value="">Selecciona…</option>
+                        <option th:each="a : ${aeropuertos}" th:value="${a.id}" th:text="${a.ciudad + ' (' + a.codigoIata + ')'}"></option>
+                    </select>
+                    <span class="error-campo" th:errors="*{destinoId}"></span>
+                </div>
+                <div class="campo" th:classappend="${#fields.hasErrors('fechaHoraSalida')} ? 'campo-error'">
+                    <label for="fechaHoraSalida">Salida</label>
+                    <input id="fechaHoraSalida" type="datetime-local" th:field="*{fechaHoraSalida}">
+                    <span class="error-campo" th:errors="*{fechaHoraSalida}"></span>
+                </div>
+                <div class="campo" th:classappend="${#fields.hasErrors('fechaHoraLlegada')} ? 'campo-error'">
+                    <label for="fechaHoraLlegada">Llegada</label>
+                    <input id="fechaHoraLlegada" type="datetime-local" th:field="*{fechaHoraLlegada}">
+                    <span class="error-campo" th:errors="*{fechaHoraLlegada}"></span>
+                </div>
+                <div class="campo" th:classappend="${#fields.hasErrors('avionId')} ? 'campo-error'">
+                    <label for="avionId">Avión (solo activos)</label>
+                    <select id="avionId" th:field="*{avionId}">
+                        <option value="">Selecciona…</option>
+                        <option th:each="a : ${aviones}" th:value="${a.id}"
+                                th:text="${a.matricula + ' · ' + a.modelo + ' (' + a.capacidadTotal + ' asientos)'}"></option>
+                    </select>
+                    <span class="error-campo" th:errors="*{avionId}"></span>
+                </div>
+            </div>
+            <button class="btn btn-oro" type="submit" th:text="${vuelo == null ? 'Programar vuelo' : 'Guardar cambios'}">Guardar</button>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

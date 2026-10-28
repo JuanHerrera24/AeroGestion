@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Mapa de asientos')}"></head>
+<body>
+<nav th:replace="~{fragments :: navbar}"></nav>
+
+<main class="container">
+    <div th:replace="~{fragments :: alertas}"></div>
+    <p><a th:href="@{/admin/aviones}">← Volver a la flota</a></p>
+
+    <div class="grid grid-2">
+        <div class="card">
+            <h2 th:text="${'Distribución de ' + avion.matricula}">Distribución</h2>
+            <p class="texto-suave" th:text="${avion.fabricante + ' ' + avion.modelo + ' · ' + avion.capacidadTotal + ' asientos'}"></p>
+            <table>
+                <thead><tr><th>Clase</th><th>Asientos</th><th>Factor de precio</th></tr></thead>
+                <tbody>
+                <tr>
+                    <td><span class="badge badge-PRIMERA">PRIMERA</span></td>
+                    <td th:text="${#lists.size(avion.asientos.?[clase == 'PRIMERA'])}"></td>
+                    <td>× 3.0</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-EJECUTIVA">EJECUTIVA</span></td>
+                    <td th:text="${#lists.size(avion.asientos.?[clase == 'EJECUTIVA'])}"></td>
+                    <td>× 1.8</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-ECONOMICA">ECONOMICA</span></td>
+                    <td th:text="${#lists.size(avion.asientos.?[clase == 'ECONOMICA'])}"></td>
+                    <td>× 1.0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>Configurar filas</h2>
+            <p class="texto-suave">Primera y Ejecutiva: asientos A C D F. Económica: A B C D E F.
+                Las filas se numeran en orden: Primera, Ejecutiva y Económica.</p>
+            <form th:action="@{/admin/aviones/{id}/asientos(id=${avion.id})}" th:object="${form}" method="post">
+                <div class="campo">
+                    <label for="filasPrimera">Filas de Primera clase</label>
+                    <input id="filasPrimera" type="number" min="0" max="10" th:field="*{filasPrimera}">
+                    <span class="error-campo" th:errors="*{filasPrimera}"></span>
+                </div>
+                <div class="campo">
+                    <label for="filasEjecutiva">Filas de clase Ejecutiva</label>
+                    <input id="filasEjecutiva" type="number" min="0" max="20" th:field="*{filasEjecutiva}">
+                    <span class="error-campo" th:errors="*{filasEjecutiva}"></span>
+                </div>
+                <div class="campo">
+                    <label for="filasEconomica">Filas de clase Económica</label>
+                    <input id="filasEconomica" type="number" min="1" max="60" th:field="*{filasEconomica}">
+                    <span class="error-campo" th:errors="*{filasEconomica}"></span>
+                </div>
+                <button class="btn btn-oro" type="submit">Guardar distribución</button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>
