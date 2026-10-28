@@ -7,8 +7,8 @@
 
 | Componente | Responsabilidad | Ofrece (provided) | Requiere (required) | Historias |
 |---|---|---|---|---|
-| **Navegador web** | Muestra las páginas al usuario | | `HTTP` | Todas |
-| **Capa Web** (Controllers MVC + vistas Thymeleaf) | Recibe las peticiones HTTP, arma las páginas HTML con Java y delega en los servicios | `HTTP` | `IAutenticacion`, `IGestionFlota`, `IGestionVuelos`, `IBusquedaVuelos`, `IReservas` | Todas |
+| **Cliente REST** (Postman) | Envía las peticiones HTTP y muestra las respuestas JSON | | `API REST` | Todas |
+| **API REST** (Controllers) | Recibe las peticiones HTTP/JSON, valida los datos y delega en los servicios | `API REST` | `IAutenticacion`, `IGestionFlota`, `IGestionVuelos`, `IBusquedaVuelos`, `IReservas` | Todas |
 | **Autenticación y Seguridad** | Registro, login, roles, cifrado de contraseñas | `IAutenticacion` | `IRepositorios` | HU-01, HU-02 |
 | **Gestión de Flota** | CRUD de aviones, estados, mapa de asientos | `IGestionFlota` | `IRepositorios` | HU-03, HU-04, HU-05 |
 | **Gestión de Vuelos** | Programar, modificar y cancelar vuelos | `IGestionVuelos` | `IGestionFlota`, `INotificacion`, `IRepositorios` | HU-06, HU-07, HU-08 |

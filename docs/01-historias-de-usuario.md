@@ -43,7 +43,7 @@
 - [ ] **Dado** que la contraseña tiene menos de 8 caracteres, **cuando** envío el formulario, **entonces** se rechaza el registro.
 - [ ] La contraseña se guarda cifrada (BCrypt), nunca en texto plano.
 
-**Notas técnicas:** `POST /registro` · colección `usuarios`
+**Notas técnicas:** `POST /api/auth/registro` · colección `usuarios`
 
 ---
 
@@ -56,11 +56,11 @@
 **para** acceder a las funciones de mi rol.
 
 #### Criterios de aceptación
-- [ ] **Dado** que mis credenciales son correctas, **cuando** inicio sesión, **entonces** inicio sesión y entro al panel de mi rol.
+- [ ] **Dado** que mis credenciales son correctas, **cuando** inicio sesión, **entonces** el sistema me identifica y me da acceso a las funciones de mi rol.
 - [ ] **Dado** que mis credenciales son incorrectas, **cuando** inicio sesión, **entonces** veo *"Credenciales inválidas"*.
 - [ ] **Dado** que soy pasajero, **cuando** intento entrar a una ruta de administrador, **entonces** recibo un error 403.
 
-**Notas técnicas:** `POST /login` · Spring Security
+**Notas técnicas:** `GET /api/auth/yo` · autenticación HTTP Basic (Spring Security)
 
 ---
 
@@ -79,7 +79,7 @@
 - [ ] **Dado** que la matrícula ya existe, **cuando** intento guardarlo, **entonces** el sistema rechaza el registro.
 - [ ] **Dado** que hay aviones registrados, **cuando** abro la sección *Flota*, **entonces** veo la lista con matrícula, modelo, capacidad y estado.
 
-**Notas técnicas:** `GET /admin/aviones`, `POST /admin/aviones` · colección `aviones`
+**Notas técnicas:** `GET /api/admin/aviones`, `POST /api/admin/aviones` · colección `aviones`
 
 ---
 
@@ -95,7 +95,7 @@
 - [ ] **Dado** un avión `ACTIVO`, **cuando** lo marco `EN_MANTENIMIENTO`, **entonces** ya no aparece como opción al programar vuelos.
 - [ ] **Dado** un avión con vuelos programados a futuro, **cuando** intento ponerlo `FUERA_DE_SERVICIO`, **entonces** el sistema me advierte qué vuelos están afectados.
 
-**Notas técnicas:** `POST /admin/aviones/{id}/estado`
+**Notas técnicas:** `PATCH /api/admin/aviones/{matricula}/estado`
 
 ---
 
@@ -112,7 +112,7 @@
 - [ ] La capacidad total del avión se calcula automáticamente a partir de los asientos.
 - [ ] Cada clase tiene un factor de precio: Económica ×1.0, Ejecutiva ×1.8, Primera ×3.0.
 
-**Notas técnicas:** `POST /admin/aviones/{id}/asientos` · asientos embebidos en el documento del avión
+**Notas técnicas:** `PUT /api/admin/aviones/{matricula}/asientos` · asientos embebidos en el documento del avión
 
 ---
 
@@ -132,7 +132,7 @@
 - [ ] **Dado** que la llegada es anterior a la salida, **cuando** guardo, **entonces** se rechaza.
 - [ ] **Dado** que el avión ya tiene otro vuelo en ese horario o no está `ACTIVO`, **cuando** lo asigno, **entonces** el sistema no lo permite.
 
-**Notas técnicas:** `POST /admin/vuelos` · colección `vuelos`
+**Notas técnicas:** `POST /api/admin/vuelos` · colección `vuelos`
 
 ---
 
@@ -149,7 +149,7 @@
 - [ ] **Dado** un vuelo con reservas, **cuando** lo cancelo, **entonces** sus reservas pasan a `CANCELADA` y se notifica a los pasajeros por correo.
 - [ ] No se puede cancelar un vuelo en estado `EN_VUELO` o `ATERRIZADO`.
 
-**Notas técnicas:** `POST /admin/vuelos/{id}`, `POST /admin/vuelos/{id}/estado`
+**Notas técnicas:** `PUT /api/admin/vuelos/{codigo}`, `PATCH /api/admin/vuelos/{codigo}/estado`, `PATCH /api/admin/vuelos/{codigo}/cancelar`
 
 ---
 
@@ -165,7 +165,7 @@
 - [ ] **Dado** que hay vuelos, **cuando** abro el panel, **entonces** veo código, ruta, fecha, estado y ocupación (asientos ocupados / capacidad).
 - [ ] Puedo filtrar por estado y por rango de fechas.
 
-**Notas técnicas:** `GET /admin/vuelos?estado=&desde=&hasta=`
+**Notas técnicas:** `GET /api/admin/resumen`, `GET /api/admin/vuelos?estado=&desde=&hasta=`
 
 ---
 
@@ -185,7 +185,7 @@
 - [ ] Solo se muestran vuelos `PROGRAMADO` o `RETRASADO` con fecha futura.
 - [ ] Puedo ordenar los resultados por precio u hora de salida.
 
-**Notas técnicas:** `GET /vuelos/buscar?origen=…&destino=…&fecha=2026-11-15` (público, sin login)
+**Notas técnicas:** `GET /api/vuelos/buscar?origen=LIM&destino=CUZ&fecha=2026-11-15` (público, sin login)
 
 ---
 
@@ -200,7 +200,7 @@
 #### Criterios de aceptación
 - [ ] **Dado** un resultado de búsqueda, **cuando** lo selecciono, **entonces** veo aeropuertos, horarios, duración, modelo de avión y precio por clase.
 
-**Notas técnicas:** `GET /vuelos/{id}`
+**Notas técnicas:** `GET /api/vuelos/{codigo}`
 
 ---
 
@@ -220,7 +220,7 @@
 - [ ] **Dado** que selecciono un asiento, **entonces** veo su precio (tarifa base × factor de la clase).
 - [ ] **Dado** que dos pasajeros eligen el mismo asiento a la vez, **cuando** confirman, **entonces** solo el primero lo obtiene.
 
-**Notas técnicas:** `GET /reservas/vuelo/{id}`
+**Notas técnicas:** `GET /api/vuelos/{codigo}/asientos`
 
 ---
 
@@ -238,7 +238,7 @@
 - [ ] Recibo un correo de confirmación con el código de reserva.
 - [ ] **Dado** que no inicié sesión, **cuando** intento confirmar, **entonces** se me pide iniciar sesión.
 
-**Notas técnicas:** `POST /reservas` · colección `reservas`
+**Notas técnicas:** `POST /api/reservas` · colección `reservas`
 
 ---
 
@@ -254,7 +254,7 @@
 - [ ] **Dado** que tengo reservas, **cuando** abro *Mis reservas*, **entonces** veo código, vuelo, ruta, fecha, asientos, total y estado.
 - [ ] Solo veo mis propias reservas, no las de otros pasajeros.
 
-**Notas técnicas:** `GET /reservas`
+**Notas técnicas:** `GET /api/reservas`
 
 ---
 
@@ -271,7 +271,7 @@
 - [ ] **Dado** que faltan menos de 24 horas, **cuando** intento cancelar, **entonces** el sistema no lo permite.
 - [ ] Recibo un correo confirmando la cancelación.
 
-**Notas técnicas:** `POST /reservas/{id}/cancelar`
+**Notas técnicas:** `PATCH /api/reservas/{codigo}/cancelar`
 
 ---
 

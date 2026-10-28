@@ -42,7 +42,3 @@ multiplicidad.
 | Reserva ◇── Asiento | **Agregación** | 1 → 1..* | Asientos elegidos en la reserva |
 | EmailNotificador ┄> Reserva | Dependencia | | Usa la reserva para armar el correo |
 
-## Diagrama
-
-![VistaLogica](../diagramas/Vista%20logica.png)
-
