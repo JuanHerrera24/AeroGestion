@@ -96,8 +96,10 @@ desde la carga (`AG101-01` sale al día siguiente).
 |---|---|
 | Historias de usuario (formato GitHub) | [docs/01-historias-de-usuario.md](docs/01-historias-de-usuario.md) |
 | Vista 1: Contexto | [docs/02-vista-contexto.md](docs/02-vista-contexto.md) · [imagen](diagramas/Vista%20de%20Contexto.png) |
-| Vista 2: Funcional (componentes) | [docs/03-vista-funcional-componentes.md](docs/03-vista-funcional-componentes.md) · [imagen](diagramas/Vista%20funcional.png) |
-| Vista 3: Lógica (clases) | [docs/04-vista-logica-clases.md](docs/04-vista-logica-clases.md) |
+| Vista 2: Funcional (componentes) | [docs/03-vista-funcional-componentes.md](docs/03-vista-funcional-componentes.md) · [imagen](diagramas/Vista%20Funcional.png) |
+| Vista 3: Lógica (clases) | [docs/04-vista-logica-clases.md](docs/04-vista-logica-clases.md) · [imagen](diagramas/Vista%20Logica.png) |
+| Vista 4: Desarrollo (clases por capas) | [imagen](diagramas/Vista%20de%20Desarrollo.png) |
+| Vista 5: Despliegue | [imagen](diagramas/Vista%20de%20Despliegue.png) |
 | Proyecto de Visual Paradigm | [diagramas/AeroGestion.vpp](diagramas/AeroGestion.vpp) |
 | Colección de Postman | [postman/AeroGestion.postman_collection.json](postman/AeroGestion.postman_collection.json) |
 

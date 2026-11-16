@@ -21,5 +21,5 @@
 
 ## Diagrama
 
-![VistaFuncional](../diagramas/Vista%20funcional.png)
+![VistaFuncional](../diagramas/Vista%20Funcional.png)
 

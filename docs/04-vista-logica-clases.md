@@ -4,6 +4,8 @@
 **interfaces** (`implements`), atributos, métodos, enumeraciones y relaciones con
 multiplicidad.
 
+![VistaLogica](../diagramas/Vista%20Logica.png)
+
 ## Abstracción y herencia (`extends`)
 
 | Clase abstracta | Subclases | Por qué |
