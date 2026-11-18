@@ -3,11 +3,14 @@ package com.aerogestion.model;
 import java.time.LocalDate;
 import java.time.Period;
 
+import org.springframework.data.annotation.TypeAlias;
+
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@TypeAlias("PASAJERO")
 public class Pasajero extends Usuario {
 
     private String documentoIdentidad;

@@ -18,5 +18,5 @@ echo       Pruebala con Postman importando postman\AeroGestion.postman_collectio
 echo       Para detener: cierra esta ventana y la de MongoDB.
 
 cd /d "%~dp0backend"
-call "%TOOLS%\apache-maven-3.9.9\bin\mvn.cmd" -q spring-boot:run
+call mvnw.cmd -q spring-boot:run
 pause

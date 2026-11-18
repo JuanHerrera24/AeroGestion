@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.aerogestion.dto.RegistroForm;
 import com.aerogestion.exception.RecursoNoEncontradoException;
+import com.aerogestion.exception.ConflictoException;
 import com.aerogestion.exception.ReglaNegocioException;
 import com.aerogestion.model.Pasajero;
 import com.aerogestion.model.Usuario;
@@ -24,7 +25,7 @@ public class AuthServiceImpl implements IAuthService {
     public Pasajero registrar(RegistroForm form) {
         String email = form.getEmail().trim().toLowerCase();
         if (usuarioRepository.existsByEmail(email)) {
-            throw new ReglaNegocioException("El email ya está en uso");
+            throw new ConflictoException("El email ya está en uso");
         }
         Pasajero pasajero = new Pasajero();
         pasajero.setNombre(form.getNombre().trim());

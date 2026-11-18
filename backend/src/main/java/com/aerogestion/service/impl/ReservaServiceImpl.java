@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import com.aerogestion.exception.RecursoNoEncontradoException;
+import com.aerogestion.exception.ConflictoException;
 import com.aerogestion.exception.ReglaNegocioException;
 import com.aerogestion.model.Asiento;
 import com.aerogestion.model.EstadoReserva;
@@ -53,7 +54,7 @@ public class ReservaServiceImpl implements IReservaService {
         Pasajero pasajero = obtenerPasajero(emailPasajero);
         Vuelo vuelo = vueloService.obtener(codigoVuelo);
         if (!vuelo.estaAbiertoParaReservas()) {
-            throw new ReglaNegocioException("El vuelo " + vuelo.getCodigoVuelo() + " no admite reservas");
+            throw new ConflictoException("El vuelo " + vuelo.getCodigoVuelo() + " no admite reservas");
         }
         List<Asiento> asientos = new ArrayList<>();
         for (String numero : numeros) {
@@ -62,7 +63,7 @@ public class ReservaServiceImpl implements IReservaService {
                 throw new ReglaNegocioException("El asiento " + numero + " no existe en este avión");
             }
             if (vuelo.getAsientosOcupados().contains(numero)) {
-                throw new ReglaNegocioException("El asiento " + numero + " ya está ocupado");
+                throw new ConflictoException("El asiento " + numero + " ya está ocupado");
             }
             asientos.add(asiento);
         }
@@ -89,7 +90,7 @@ public class ReservaServiceImpl implements IReservaService {
                 .and("asientosOcupados").nin(numeros));
         Update update = new Update().addToSet("asientosOcupados").each(numeros.toArray());
         if (mongoTemplate.updateFirst(query, update, Vuelo.class).getModifiedCount() == 0) {
-            throw new ReglaNegocioException("Alguno de los asientos elegidos acaba de ser reservado. Elige otro.");
+            throw new ConflictoException("Alguno de los asientos elegidos acaba de ser reservado. Elige otro.");
         }
     }
 
@@ -112,7 +113,7 @@ public class ReservaServiceImpl implements IReservaService {
     public Reserva cancelar(String codigoReserva, String emailPasajero) {
         Reserva reserva = obtenerDelPasajero(codigoReserva, emailPasajero);
         if (!reserva.puedeCancelarse()) {
-            throw new ReglaNegocioException("Solo puedes cancelar hasta 24 horas antes de la salida del vuelo");
+            throw new ConflictoException("Solo puedes cancelar hasta 24 horas antes de la salida del vuelo");
         }
         reserva.cancelar();
         reservaRepository.save(reserva);

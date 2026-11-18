@@ -1,5 +1,6 @@
 package com.aerogestion.model;
 
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -9,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Document(collection = "aeropuertos")
+@TypeAlias("AEROPUERTO")
 public class Aeropuerto extends EntidadBase {
 
     /** Código IATA de 3 letras, ej. LIM, CUZ, BOG. */

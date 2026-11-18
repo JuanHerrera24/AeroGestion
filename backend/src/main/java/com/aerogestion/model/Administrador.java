@@ -1,10 +1,13 @@
 package com.aerogestion.model;
 
+import org.springframework.data.annotation.TypeAlias;
+
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@TypeAlias("ADMINISTRADOR")
 public class Administrador extends Usuario {
 
     private String codigoEmpleado;

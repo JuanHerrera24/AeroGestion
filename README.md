@@ -15,9 +15,21 @@ Se expone como una **API REST** que se prueba con Postman.
 **Opción manual:**
 ```bash
 cd backend
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
-Requisitos: Java 21, Maven y MongoDB corriendo en `localhost:27017`.
+Requisitos: Java 21 y MongoDB corriendo en `localhost:27017`. No hace falta instalar Maven:
+el proyecto trae el Maven Wrapper (`mvnw` / `mvnw.cmd`).
+
+## Pruebas automáticas
+
+```bash
+cd backend
+./mvnw test
+```
+
+30 pruebas que no necesitan MongoDB: códigos HTTP de los controladores (`@WebMvcTest`),
+reglas de negocio de las reservas (Mockito) y el discriminador `tipo` de MongoDB.
+Detalle en [docs/07-api-rest-tres-capas.md](docs/07-api-rest-tres-capas.md#9-pruebas-peticiones-http-y-respuestas-json).
 
 La primera vez se cargan **datos de demostración**: 6 aeropuertos, 5 aviones y 100 vuelos
 para los 10 días siguientes. Los vuelos se llaman `AG1XX-DD`, donde `DD` es el día contado
@@ -76,10 +88,16 @@ desde la carga (`AG101-01` sale al día siguiente).
 | Código | Significa |
 |---|---|
 | 200 / 201 | Correcto / creado |
-| 400 | Datos inválidos o regla de negocio incumplida (el JSON dice por qué) |
+| 400 | Datos inválidos: falta un campo, origen = destino, JSON mal formado… (el JSON dice por qué) |
 | 401 | Falta iniciar sesión o credenciales incorrectas |
 | 403 | El rol no tiene permiso |
-| 404 | No existe el vuelo, avión o reserva |
+| 404 | No existe el vuelo, avión, reserva o la ruta |
+| 405 | La ruta no admite ese método (ej. `DELETE` de un vuelo: los vuelos se cancelan, no se borran) |
+| 409 | Conflicto con el estado actual: asiento ya ocupado, matrícula o email repetido, avión con otro vuelo a esa hora, cancelación a menos de 24 h |
+| 500 | Error inesperado (respuesta JSON genérica; el detalle queda en el log) |
+
+Todos los errores responden con el mismo formato:
+`{"status": 409, "error": "Conflicto", "mensaje": "El asiento 1A ya está ocupado", "fecha": "…"}`
 
 ## Reglas de negocio
 
@@ -98,8 +116,9 @@ desde la carga (`AG101-01` sale al día siguiente).
 | Vista 1: Contexto | [docs/02-vista-contexto.md](docs/02-vista-contexto.md) · [imagen](diagramas/Vista%20de%20Contexto.png) |
 | Vista 2: Funcional (componentes) | [docs/03-vista-funcional-componentes.md](docs/03-vista-funcional-componentes.md) · [imagen](diagramas/Vista%20Funcional.png) |
 | Vista 3: Lógica (clases) | [docs/04-vista-logica-clases.md](docs/04-vista-logica-clases.md) · [imagen](diagramas/Vista%20Logica.png) |
-| Vista 4: Desarrollo (clases por capas) | [imagen](diagramas/Vista%20de%20Desarrollo.png) |
-| Vista 5: Despliegue | [imagen](diagramas/Vista%20de%20Despliegue.png) |
+| Vista 4: Desarrollo (clases por capas) | [docs/05-vista-desarrollo.md](docs/05-vista-desarrollo.md) · [imagen](diagramas/Vista%20de%20Desarrollo.png) |
+| Vista 5: Despliegue | [docs/06-vista-despliegue.md](docs/06-vista-despliegue.md) · [imagen](diagramas/Vista%20de%20Despliegue.png) |
+| API REST en tres capas (guía «De la Web a una API REST») | [docs/07-api-rest-tres-capas.md](docs/07-api-rest-tres-capas.md) |
 | Proyecto de Visual Paradigm | [diagramas/AeroGestion.vpp](diagramas/AeroGestion.vpp) |
 | Colección de Postman | [postman/AeroGestion.postman_collection.json](postman/AeroGestion.postman_collection.json) |
 
@@ -117,8 +136,13 @@ backend/src/main/java/com/aerogestion/
 ├── model/               EntidadBase, Usuario, Pasajero, Administrador, Avion, Asiento (+3 clases),
 │                        Aeropuerto, Vuelo, Reserva, interfaces Tarificable y Cancelable, enums
 ├── notification/        Notificador, EmailNotificador
-├── config/              SecurityConfig, MongoConfig, DataSeeder
-└── exception/           Manejo de errores en JSON
+├── config/              SecurityConfig, MongoConfig (discriminador "tipo"), DataSeeder
+└── exception/           GlobalExceptionHandler y excepciones (400, 404, 409)
+
+backend/src/test/java/com/aerogestion/
+├── controller/          ReservaControllerTest, VueloControllerTest (códigos HTTP)
+├── service/impl/        ReservaServiceImplTest (reglas de negocio)
+└── config/              DiscriminadorTipoTest (persistencia de subtipos)
 ```
 
 ## Correo

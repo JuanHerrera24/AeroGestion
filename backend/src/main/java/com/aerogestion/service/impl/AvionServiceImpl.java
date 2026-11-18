@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.aerogestion.dto.AvionForm;
 import com.aerogestion.dto.ConfigAsientosForm;
 import com.aerogestion.exception.RecursoNoEncontradoException;
+import com.aerogestion.exception.ConflictoException;
 import com.aerogestion.exception.ReglaNegocioException;
 import com.aerogestion.model.Asiento;
 import com.aerogestion.model.AsientoEconomico;
@@ -52,7 +53,7 @@ public class AvionServiceImpl implements IAvionService {
     public Avion crear(AvionForm form) {
         String matricula = form.getMatricula().trim().toUpperCase();
         if (avionRepository.existsByMatricula(matricula)) {
-            throw new ReglaNegocioException("Ya existe un avión con la matrícula " + matricula);
+            throw new ConflictoException("Ya existe un avión con la matrícula " + matricula);
         }
         Avion avion = new Avion();
         avion.setMatricula(matricula);
@@ -77,7 +78,7 @@ public class AvionServiceImpl implements IAvionService {
         boolean tieneReservas = vueloRepository.findByAvion(avion).stream()
                 .anyMatch(v -> v.estaAbiertoParaReservas() && !v.getAsientosOcupados().isEmpty());
         if (tieneReservas) {
-            throw new ReglaNegocioException(
+            throw new ConflictoException(
                     "No se puede cambiar la distribución: el avión tiene vuelos futuros con asientos reservados");
         }
         avion.setAsientos(generarAsientos(form));

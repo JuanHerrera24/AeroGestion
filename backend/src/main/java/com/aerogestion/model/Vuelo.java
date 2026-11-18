@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -15,6 +16,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Document(collection = "vuelos")
+@TypeAlias("VUELO")
 public class Vuelo extends EntidadBase implements Cancelable {
 
     @Indexed(unique = true)

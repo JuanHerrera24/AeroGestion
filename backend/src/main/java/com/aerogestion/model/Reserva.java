@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -14,6 +15,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Document(collection = "reservas")
+@TypeAlias("RESERVA")
 public class Reserva extends EntidadBase implements Cancelable {
 
     /** Horas mínimas antes de la salida para poder cancelar. */

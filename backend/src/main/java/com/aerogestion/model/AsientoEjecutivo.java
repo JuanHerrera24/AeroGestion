@@ -1,8 +1,11 @@
 package com.aerogestion.model;
 
+import org.springframework.data.annotation.TypeAlias;
+
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
+@TypeAlias("EJECUTIVO")
 public class AsientoEjecutivo extends Asiento {
 
     public AsientoEjecutivo(int fila, String letra) {

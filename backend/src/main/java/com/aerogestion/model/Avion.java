@@ -3,6 +3,7 @@ package com.aerogestion.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -12,6 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Document(collection = "aviones")
+@TypeAlias("AVION")
 public class Avion extends EntidadBase {
 
     @Indexed(unique = true)

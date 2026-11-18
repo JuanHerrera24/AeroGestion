@@ -1,8 +1,11 @@
 package com.aerogestion.model;
 
+import org.springframework.data.annotation.TypeAlias;
+
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
+@TypeAlias("PRIMERA_CLASE")
 public class AsientoPrimeraClase extends Asiento {
 
     public AsientoPrimeraClase(int fila, String letra) {

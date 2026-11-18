@@ -15,6 +15,7 @@ import com.aerogestion.dto.ClaseResumenDTO;
 import com.aerogestion.dto.FilaAsientosDTO;
 import com.aerogestion.dto.VueloForm;
 import com.aerogestion.exception.RecursoNoEncontradoException;
+import com.aerogestion.exception.ConflictoException;
 import com.aerogestion.exception.ReglaNegocioException;
 import com.aerogestion.model.Aeropuerto;
 import com.aerogestion.model.Asiento;
@@ -61,7 +62,7 @@ public class VueloServiceImpl implements IVueloService {
     public Vuelo programar(VueloForm form) {
         String codigo = form.getCodigoVuelo().trim().toUpperCase();
         if (vueloRepository.existsByCodigoVuelo(codigo)) {
-            throw new ReglaNegocioException("Ya existe un vuelo con el código " + codigo);
+            throw new ConflictoException("Ya existe un vuelo con el código " + codigo);
         }
         if (!form.getFechaHoraSalida().isAfter(LocalDateTime.now())) {
             throw new ReglaNegocioException("La salida debe ser una fecha futura");
@@ -76,11 +77,11 @@ public class VueloServiceImpl implements IVueloService {
     public Vuelo actualizar(String codigoVuelo, VueloForm form) {
         Vuelo vuelo = obtener(codigoVuelo);
         if (!vuelo.puedeCancelarse()) {
-            throw new ReglaNegocioException("Solo se pueden editar vuelos programados o retrasados");
+            throw new ConflictoException("Solo se pueden editar vuelos programados o retrasados");
         }
         boolean cambiaAvion = !vuelo.getAvion().getMatricula().equalsIgnoreCase(form.getMatriculaAvion().trim());
         if (cambiaAvion && !vuelo.getAsientosOcupados().isEmpty()) {
-            throw new ReglaNegocioException("No se puede cambiar el avión de un vuelo con asientos reservados");
+            throw new ConflictoException("No se puede cambiar el avión de un vuelo con asientos reservados");
         }
         aplicarFormulario(vuelo, form);
         return vueloRepository.save(vuelo);
@@ -96,10 +97,10 @@ public class VueloServiceImpl implements IVueloService {
         }
         Avion avion = avionService.obtener(form.getMatriculaAvion());
         if (!avion.estaDisponible()) {
-            throw new ReglaNegocioException("El avión " + avion.getMatricula() + " no está activo");
+            throw new ConflictoException("El avión " + avion.getMatricula() + " no está activo");
         }
         if (avion.getCapacidadTotal() == 0) {
-            throw new ReglaNegocioException("El avión " + avion.getMatricula() + " no tiene asientos configurados");
+            throw new ConflictoException("El avión " + avion.getMatricula() + " no tiene asientos configurados");
         }
         boolean cruce = vueloRepository.findByAvion(avion).stream()
                 .filter(otro -> !otro.getId().equals(vuelo.getId()))
@@ -107,7 +108,7 @@ public class VueloServiceImpl implements IVueloService {
                 .anyMatch(otro -> form.getFechaHoraSalida().isBefore(otro.getFechaHoraLlegada())
                         && otro.getFechaHoraSalida().isBefore(form.getFechaHoraLlegada()));
         if (cruce) {
-            throw new ReglaNegocioException("El avión " + avion.getMatricula() + " ya tiene otro vuelo en ese horario");
+            throw new ConflictoException("El avión " + avion.getMatricula() + " ya tiene otro vuelo en ese horario");
         }
         vuelo.setOrigen(obtenerAeropuerto(form.getOrigen()));
         vuelo.setDestino(obtenerAeropuerto(form.getDestino()));
@@ -130,7 +131,7 @@ public class VueloServiceImpl implements IVueloService {
         }
         Vuelo vuelo = obtener(codigoVuelo);
         if (vuelo.getEstado() == EstadoVuelo.CANCELADO) {
-            throw new ReglaNegocioException("El vuelo está cancelado");
+            throw new ConflictoException("El vuelo está cancelado");
         }
         vuelo.setEstado(estado);
         return vueloRepository.save(vuelo);
