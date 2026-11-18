@@ -112,6 +112,7 @@ Todos los errores responden con el mismo formato:
 
 | Entregable | Archivo |
 |---|---|
+| Requisitos funcionales (RF-01 a RF-15) | [docs/00-requisitos-funcionales.md](docs/00-requisitos-funcionales.md) |
 | Historias de usuario (formato GitHub) | [docs/01-historias-de-usuario.md](docs/01-historias-de-usuario.md) |
 | Vista 1: Contexto | [docs/02-vista-contexto.md](docs/02-vista-contexto.md) · [imagen](diagramas/Vista%20de%20Contexto.png) |
 | Vista 2: Funcional (componentes) | [docs/03-vista-funcional-componentes.md](docs/03-vista-funcional-componentes.md) · [imagen](diagramas/Vista%20Funcional.png) |
