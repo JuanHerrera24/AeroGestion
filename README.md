@@ -40,7 +40,8 @@ desde la carga (`AG101-01` sale al día siguiente).
 1. Abre Postman → **Import** → elige `postman/AeroGestion.postman_collection.json`.
 2. La colección trae 4 carpetas: **Público**, **Pasajero**, **Administrador** y
    **Validaciones y seguridad**. La autenticación ya está configurada en cada carpeta.
-3. Si hace falta, ajusta las variables de la colección `vuelo` y `fecha`.
+3. Si hace falta, ajusta las variables de la colección `vuelo`, `fecha` y `reserva`
+   (los vuelos de demostración cubren los 10 días siguientes a la primera carga).
 
 ### Cuentas de prueba (HTTP Basic: email y contraseña)
 
@@ -55,34 +56,35 @@ desde la carga (`AG101-01` sale al día siguiente).
 | Método | Ruta | Descripción | HU |
 |---|---|---|---|
 | POST | `/api/auth/registro` | Registrar pasajero | HU-01 |
-| GET | `/api/aeropuertos` | Listar aeropuertos | |
-| GET | `/api/vuelos/buscar?origen=LIM&destino=CUZ&fecha=2026-11-01&orden=precio` | Buscar vuelos | HU-09 |
-| GET | `/api/vuelos/proximos` | Próximas salidas | |
+| GET | `/api/aeropuertos` | Listar aeropuertos | HU-21 |
+| GET | `/api/vuelos/buscar?origen=LIM&destino=CUZ&fecha=2026-11-01&orden=precio` | Buscar vuelos (`orden=precio` opcional) | HU-09, HU-22 |
+| GET | `/api/vuelos/proximos` | Próximas salidas | HU-20 |
 | GET | `/api/vuelos/{codigo}` | Detalle y precio por clase | HU-10 |
 | GET | `/api/vuelos/{codigo}/asientos` | Mapa de asientos | HU-11 |
 
 ### Pasajero
 | Método | Ruta | Descripción | HU |
 |---|---|---|---|
-| GET | `/api/auth/yo` | Usuario autenticado | HU-02 |
+| GET | `/api/auth/yo` | Mi perfil (usuario autenticado) | HU-15 |
 | POST | `/api/reservas` | Reservar asientos | HU-12 |
 | GET | `/api/reservas` | Mis reservas | HU-13 |
-| GET | `/api/reservas/{codigo}` | Detalle de una reserva | HU-13 |
+| GET | `/api/reservas/{codigo}` | Detalle de una reserva | HU-23 |
 | PATCH | `/api/reservas/{codigo}/cancelar` | Cancelar (hasta 24 h antes) | HU-14 |
 
 ### Administrador
 | Método | Ruta | Descripción | HU |
 |---|---|---|---|
 | GET | `/api/admin/resumen` | Indicadores del panel | HU-08 |
-| GET | `/api/admin/aviones` | Listar flota | HU-03 |
+| GET | `/api/admin/aviones` | Listar flota | HU-16 |
 | POST | `/api/admin/aviones` | Registrar avión | HU-03 |
+| GET | `/api/admin/aviones/{matricula}` | Detalle de un avión | HU-17 |
 | PATCH | `/api/admin/aviones/{matricula}/estado` | Cambiar estado del avión | HU-04 |
 | PUT | `/api/admin/aviones/{matricula}/asientos` | Configurar mapa de asientos | HU-05 |
-| GET | `/api/admin/vuelos?estado=&desde=&hasta=` | Listar vuelos con filtros | HU-08 |
+| GET | `/api/admin/vuelos?estado=&desde=&hasta=` | Listar vuelos con filtros | HU-19 |
 | POST | `/api/admin/vuelos` | Programar vuelo | HU-06 |
 | PUT | `/api/admin/vuelos/{codigo}` | Editar vuelo | HU-07 |
-| PATCH | `/api/admin/vuelos/{codigo}/estado` | Cambiar estado (RETRASADO, EN_VUELO…) | HU-07 |
-| PATCH | `/api/admin/vuelos/{codigo}/cancelar` | Cancelar vuelo y sus reservas | HU-07 |
+| PATCH | `/api/admin/vuelos/{codigo}/estado` | Cambiar estado (RETRASADO, EN_VUELO…) | HU-07, HU-18 |
+| PATCH | `/api/admin/vuelos/{codigo}/cancelar` | Cancelar vuelo y avisar a los pasajeros | HU-07, HU-24 |
 
 ### Códigos de respuesta
 | Código | Significa |
@@ -112,8 +114,9 @@ Todos los errores responden con el mismo formato:
 
 | Entregable | Archivo |
 |---|---|
-| Requisitos funcionales (RF-01 a RF-15) | [docs/00-requisitos-funcionales.md](docs/00-requisitos-funcionales.md) |
-| Historias de usuario (formato GitHub) | [docs/01-historias-de-usuario.md](docs/01-historias-de-usuario.md) |
+| Requisitos funcionales (RF-01 a RF-24) | [docs/00-requisitos-funcionales.md](docs/00-requisitos-funcionales.md) |
+| Historias de usuario (24, formato GitHub, con mockup cada una) | [docs/01-historias-de-usuario.md](docs/01-historias-de-usuario.md) |
+| Mockups de las 24 historias | [mockups/](mockups/) (`HU-01.png` … `HU-24.png`) |
 | Vista 1: Contexto | [docs/02-vista-contexto.md](docs/02-vista-contexto.md) · [imagen](diagramas/Vista%20de%20Contexto.png) |
 | Vista 2: Funcional (componentes) | [docs/03-vista-funcional-componentes.md](docs/03-vista-funcional-componentes.md) · [imagen](diagramas/Vista%20Funcional.png) |
 | Vista 3: Lógica (clases) | [docs/04-vista-logica-clases.md](docs/04-vista-logica-clases.md) · [imagen](diagramas/Vista%20Logica.png) |
@@ -151,3 +154,11 @@ backend/src/test/java/com/aerogestion/
 Sin una cuenta SMTP configurada, los correos se **simulan** y aparecen en la consola
 (`[Correo simulado] ...`). Para enviarlos de verdad, completa `spring.mail.username` y
 `spring.mail.password` en `application.properties`.
+
+## Mockups
+
+Cada historia de usuario tiene su mockup: una pantalla de ejemplo de cómo se vería la
+aplicación para esa historia, con datos reales del sistema (vuelo `AG101-05` Lima → Cusco,
+flota `OB-xxxx`, precios por clase). Están en [mockups/](mockups/) y se regeneran con
+`python mockups/generar_mockups.py <carpeta>` (crea los HTML; luego se capturan a PNG con
+Chrome sin interfaz).

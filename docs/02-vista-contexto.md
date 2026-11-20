@@ -1,35 +1,42 @@
 # Vista 1: Contexto
 
-**Objetivo:** mostrar **AeroGestión** delimitado por su frontera (System), los **actores**
-que interactúan con él desde afuera y los **servicios principales** que ofrece a cada uno.
-Se representa con un **diagrama de casos de uso UML**.
+**Objetivo:** mostrar a **AeroGestión** como una sola caja negra y a las **entidades externas**
+con las que intercambia información. No muestra cómo funciona por dentro, solo **qué entra y
+qué sale** del sistema.
 
-## Actores
+Se representa con un **diagrama de contexto (DFD nivel 0, notación Yourdon)**:
 
-| Actor | Tipo | Descripción |
+- El **círculo** del centro es el sistema completo (*proceso 0*).
+- Los **rectángulos** son las **entidades externas**: personas o sistemas que están fuera de
+  AeroGestión pero le envían o reciben datos.
+- Las **flechas** son los **flujos de datos**. Cada una dice qué información viaja y qué
+  historias de usuario la originan.
+
+## Entidades externas
+
+| Entidad externa | Tipo | Descripción |
 |---|---|---|
-| **Visitante** | Persona | No registrado; busca y consulta vuelos y puede registrarse |
-| **Pasajero** | Persona | Registrado; reserva, elige asiento, consulta y cancela reservas |
-| **Administrador** | Persona | Empleado de la aerolínea; gestiona flota y vuelos |
-| **MongoDB** | `<<system>>` externo | Base de datos donde se guarda la información |
-| **Servicio de correo** | `<<system>>` externo | Envía confirmaciones y cancelaciones de reserva |
+| **Visitante** | Persona | No registrado; busca vuelos, ve su detalle y puede registrarse |
+| **Pasajero** | Persona | Registrado; inicia sesión, elige asientos, reserva y cancela |
+| **Administrador de la Aerolínea** | Persona | Empleado; gestiona la flota, los asientos y los vuelos |
+| **Servicio de Correo (SMTP)** | Sistema externo | Envía los correos de confirmación y cancelación |
 
-## Casos de uso (dentro de AeroGestión)
+MongoDB **no** aparece como entidad externa: en un diagrama de contexto los almacenes de datos
+son parte del sistema (se verán por dentro en los diagramas de nivel 1).
 
-| Caso de uso | Actores | Historias |
+## Flujos de datos
+
+| Desde → Hacia | Flujo de datos | Historias |
 |---|---|---|
-| Buscar vuelos | Visitante, Pasajero | HU-09, HU-10 |
-| Registrarse | Visitante | HU-01 |
-| Iniciar sesión | Pasajero, Administrador | HU-02 |
-| Reservar vuelo | Pasajero, Servicio de correo | HU-12, HU-13 |
-| Seleccionar asiento | (incluido en Reservar vuelo) | HU-11 |
-| Cancelar reserva | Pasajero, Servicio de correo | HU-14 |
-| Gestionar flota | Administrador | HU-03, HU-04, HU-05 |
-| Gestionar vuelos | Administrador, Servicio de correo | HU-06, HU-07, HU-08 |
-
-Todos los casos de uso guardan y leen su información en **MongoDB**.
+| Visitante → AeroGestión | Busca vuelos, consulta detalle y se registra | HU-01, HU-09, HU-10, HU-20, HU-21, HU-22 |
+| AeroGestión → Visitante | Resultados de búsqueda y precios por clase | HU-09, HU-10 |
+| Pasajero → AeroGestión | Inicia sesión, elige asientos, reserva y cancela | HU-02, HU-11, HU-12, HU-14, HU-15, HU-23 |
+| AeroGestión → Pasajero | Mapa de asientos, código de reserva e historial | HU-11, HU-12, HU-13 |
+| Administrador → AeroGestión | Gestiona flota, asientos y vuelos | HU-03 a HU-07, HU-16 a HU-19 |
+| AeroGestión → Administrador | Panel de vuelos y ocupación | HU-08 |
+| AeroGestión → Servicio de Correo | Solicita envío de confirmación o cancelación | HU-07, HU-12, HU-14, HU-24 |
+| Servicio de Correo → AeroGestión | Confirma el envío del correo | HU-07, HU-12, HU-14, HU-24 |
 
 ## Diagrama
 
 ![VistaContexto](../diagramas/Vista%20de%20Contexto.png)
-
